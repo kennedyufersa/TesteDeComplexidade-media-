@@ -60,7 +60,7 @@ double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada)
             j++;
         }
 
-        //Uma pequena condição para que a barra anterior mostre o progresso quanto chegar em 100%
+        //Uma pequena condição para que a barra anterior mostre o progresso quando chegar em 100%
         if (i == qntdVezesTestada)
         {
             break;
@@ -138,7 +138,7 @@ char *porcentagemBarra(int qntdTestes, int total, int tamanhoBarra)
     barraString[tamanhoBarra + 6] = '\0';
     return barraString;
 }
-
+//Escreve os tempos em um novo arquivo com nome gerado aleatoriamente
 void escreverEmArquivo(double *tempo, int qntdDeTestes)
 {
 
