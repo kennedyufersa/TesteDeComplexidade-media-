@@ -6,7 +6,7 @@
 double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada);
 void insertionSort(int *arr, int n);
 char loading(int i);
-char *setPorcentagem(int qntdTestes, int total, int tamanhoBarra);
+char *porcentagemBarra(int qntdTestes, int total, int tamanhoBarra);
 void escreverEmArquivo(double *tempo, int qntdDeTestes);
 
 int main()
@@ -53,7 +53,7 @@ double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada)
         //Este laço serve para mostrar uma barra de progresso na conclusão dos testes com base na quantidade de vezes testada 
         while (j <= 4)
         {
-            printf("\r %s%% %c", setPorcentagem(i, qntdVezesTestada, 100), loading(j));
+            printf("\r %s%% %c", porcentagemBarra(i, qntdVezesTestada, 100), loading(j));
             fflush(stdout);
             for (int delay = 0; delay < 100000000; delay++)
                 ;
@@ -116,7 +116,7 @@ char loading(int i)
         return '-';
 }
 
-char *setPorcentagem(int qntdTestes, int total, int tamanhoBarra)
+char *porcentagemBarra(int qntdTestes, int total, int tamanhoBarra)
 {
     int porcentagem = (int)(((double)qntdTestes / total) * 100);
 
