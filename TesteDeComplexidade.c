@@ -11,7 +11,7 @@ void escreverEmArquivo(double *tempo, int qntdDeTestes);
 
 int main()
 {
-    int qntdTestes = 5;
+    int qntdTestes = 10;
     double *tempos = complexidadeMedia(insertionSort, qntdTestes);
     
     escreverEmArquivo(tempos,qntdTestes);
@@ -36,13 +36,21 @@ double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada)
 {
     clock_t start_time, end_time;
     int i, j;
+    //variavel que vai armazenar os tempos de cada ordenação de um determinado vetor
     double *tempos = (double *)malloc(qntdVezesTestada * sizeof(double));
-    int tamanho = 100;
+    //Tamanho do nosso vetor que vai ser ordenado
+    int tamanho = 1000000;
+    //Função que recebe uma seed qualquer e o tamanho do vetor, e vai gerar uma quantidade de valores para preencher o vetor igual ao tamanho
     int *array = geradorRandom(1000, tamanho);
+    //Usando a mesma seed (semente), podemos gerar um vetor identico ao anterior
     int *valores = geradorRandom(1000, tamanho);
+    //Neste laço realizamos os testes com o algoritmo de ordenação em questão uma quantidade de vezes = qntdVezesTestada, para verificar e chegarmos a qual é o tempo mais proximo
+    //Que o algoritmo em analise leva para ordenar essa quantidade definida de valores, quanto mais testes, mais preciso o calculo de tempo
     for (i = 0; i <= qntdVezesTestada + 1; i++)
     {
+
         j = 0;
+        //Este laço serve para mostrar uma barra de progresso na conclusão dos testes com base na quantidade de vezes testada 
         while (j <= 4)
         {
             printf("\r %s%% %c", setPorcentagem(i, qntdVezesTestada, 100), loading(j));
@@ -51,15 +59,23 @@ double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada)
                 ;
             j++;
         }
+
+        //Uma pequena condição para que a barra anterior mostre o progresso quanto chegar em 100%
         if (i == qntdVezesTestada)
         {
             break;
         }
+
+        //Nesta parte do codigo iniciamos a cronometragem de quanto tempo leva o algoritmo de ordenação em questão para ordenar o vetor passado
         start_time = clock();
         func(array, tamanho);
         end_time = clock();
+        //Encerra-se a cronometragem do tempo de execução do algoritmo e armazenamos na variavel "tempoPassado" que depois é armazenado em um vetor com os tempos
         double tempoPassado = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
         tempos[i] = tempoPassado;
+
+        //Aqui reiniciamos o vetor ao seu estado inicial com base em sua copia que foi criada anteriormente, dessa forma podemos calcular de novo o tempo de ordenação do algoritmo
+        //Com o vetor inicial
         memcpy(array, valores, tamanho * sizeof(int));
     }
     free(array);
@@ -126,7 +142,7 @@ char *setPorcentagem(int qntdTestes, int total, int tamanhoBarra)
 void escreverEmArquivo(double *tempo, int qntdDeTestes)
 {
 
-    char *nomeDoArquivo;
+    char *nomeDoArquivo = (char*)malloc(20*sizeof(char));
     srand(time(NULL));
     sprintf(nomeDoArquivo, "Tempos%i.txt", rand() % 100);
     FILE *arquivoDeTempo = fopen(nomeDoArquivo, "w");
@@ -138,6 +154,6 @@ void escreverEmArquivo(double *tempo, int qntdDeTestes)
 
     for (int i = 0; i < qntdDeTestes; i++)
     {
-        fprintf(arquivoDeTempo, "Tempo [%i] = %f", i + 1, tempo);
+        fprintf(arquivoDeTempo, "\nTempo [%i] = %f", i + 1, tempo);
     }
 }
