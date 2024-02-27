@@ -10,7 +10,7 @@ char *setPorcentagem(int qntdTestes, int total, int tamanhoBarra);
 
 int main()
 {
-    int qntdTestes = 20;
+    int qntdTestes = 5;
     double *tempos = complexidadeMedia(insertionSort, qntdTestes);
     int i;
     for (i = 0; i < qntdTestes; i++)
@@ -37,32 +37,33 @@ int *geradorRandom(int seed, int qntd)
 double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada)
 {
     clock_t start_time, end_time;
-    int i, j = 0;
+    int i, j;
     double *tempos = (double *)malloc(qntdVezesTestada * sizeof(double));
-    int tamanho = 100000;
+    int tamanho = 100;
     int *array = geradorRandom(1000, tamanho);
     int *valores = geradorRandom(1000, tamanho);
-    // memcpy(valores, array, tamanho*sizeof(int));
-    for (i = 0; i < qntdVezesTestada; i++)
+    for (i = 0; i <= qntdVezesTestada + 1; i++)
     {
+        j = 0;
+        while (j <= 4){
+            printf("\r %s%% %c", setPorcentagem(i,qntdVezesTestada, 100),loading(j));
+            fflush(stdout);
+            for (int delay = 0; delay < 100000000; delay++);
+            j++;
+            
+        } 
+        if(i == qntdVezesTestada){
+            break;
+        }
         start_time = clock();
         func(array, tamanho);
         end_time = clock();
         double tempoPassado = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
         tempos[i] = tempoPassado;
         memcpy(array, valores, tamanho * sizeof(int));
-        while (j <= 3){
-            printf("\r %s [%c]", setPorcentagem(i,qntdVezesTestada, 100),loading(j));
-            fflush(stdout);
-            for (int delay = 0; delay < 1000000000; delay++);
-            j++;
-            
-        } 
         
-        if (j > 3)
-        {
-            j = 0;
-        }
+        
+        
     }
     free(array);
     return tempos;
@@ -96,30 +97,31 @@ char loading(int i)
         return '\\';
     else if (i == 2)
         return '|';
-    else
+    else if(i == 3)
         return '/';
+    else 
+    return '-';
 }
 
 char *setPorcentagem(int qntdTestes, int total, int tamanhoBarra){
      int porcentagem = (int)(((double)qntdTestes / total) * 100);
 
-    int numPreenchidos = (porcentagem * tamanhoBarra) / 100;
+    int numPreenchidos = (porcentagem * tamanhoBarra + 50) / 100;
 
-    char *barraString = (char *)malloc((tamanhoBarra + 7) * sizeof(char));
+    char *barraString = (char *)malloc((tamanhoBarra + 6) * sizeof(char));
     barraString[0] = '[';
     for (int i = 1; i <= tamanhoBarra; i++)
     {
         barraString[i] = (i <= numPreenchidos) ? '=' : ' ';
     }
-    char aux[10];
+    char aux[4];
     sprintf(aux,"%i", porcentagem);
     barraString[tamanhoBarra + 1] = ']';
     barraString[tamanhoBarra + 2] = ' ';
     barraString[tamanhoBarra + 3] = aux[0];
     barraString[tamanhoBarra + 4] = aux[1];
     barraString[tamanhoBarra + 5] = aux[2];
-    barraString[tamanhoBarra + 6] =  '%';
-    barraString[tamanhoBarra + 7] = '\0';
+    barraString[tamanhoBarra + 6] = '\0';
     return barraString;
 
 }
