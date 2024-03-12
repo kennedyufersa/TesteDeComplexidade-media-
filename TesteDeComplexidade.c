@@ -5,21 +5,19 @@
 
 double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada, int tamanho, int seed);
 void insertionSort(int *arr, int n);
+void merge(int arr[], int left[], int left_size, int right[], int right_size);
+void merge_sort(int arr[], int size);
 char loading(int i);
 char *porcentagemBarra(int qntdTestes, int total, int tamanhoBarra);
 void escreverEmArquivo(double *tempo, int qntdDeTestes);
 
 int main()
 {
-    int qntdTestes = 10;
-    int tamanho = 100000;
-    double *tempos;
-    for (int i = 0; i < 5; i++)
-    {
-       tempos = complexidadeMedia(insertionSort, qntdTestes, tamanho, rand() % tamanho);
-
-        escreverEmArquivo(tempos, qntdTestes);
-    }
+    int qntdTestes = 5;
+    int tamanho = 1000000;
+     double *tempos = complexidadeMedia(insertionSort, qntdTestes, tamanho, rand() % tamanho);
+    //double *tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, rand() % tamanho);
+    escreverEmArquivo(tempos, qntdTestes);
 
     free(tempos);
 }
@@ -81,6 +79,7 @@ double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada, int tama
     return tempos;
 }
 
+
 // Teste com insertion sort
 void insertionSort(int *arr, int n)
 {
@@ -99,6 +98,69 @@ void insertionSort(int *arr, int n)
         }
         arr[j + 1] = chave;
     }
+}
+
+void merge(int arr[], int left[], int left_size, int right[], int right_size)
+{
+    int i = 0, j = 0, k = 0;
+
+    while (i < left_size && j < right_size)
+    {
+        if (left[i] <= right[j])
+        {
+            arr[k] = left[i];
+            i++;
+        }
+        else
+        {
+            arr[k] = right[j];
+            j++;
+        }
+        k++;
+    }
+
+    while (i < left_size)
+    {
+        arr[k] = left[i];
+        i++;
+        k++;
+    }
+
+    while (j < right_size)
+    {
+        arr[k] = right[j];
+        j++;
+        k++;
+    }
+}
+
+void merge_sort(int arr[], int size)
+{
+    if (size <= 1)
+    {
+        return;
+    }
+
+    int mid = size / 2;
+    int *left = (int *)malloc(mid * sizeof(int));
+    int *right = (int *)malloc((size - mid) * sizeof(int));
+
+    for (int i = 0; i < mid; i++)
+    {
+        left[i] = arr[i];
+    }
+
+    for (int i = mid; i < size; i++)
+    {
+        right[i - mid] = arr[i];
+    }
+
+    merge_sort(left, mid);
+    merge_sort(right, size - mid);
+    merge(arr, left, mid, right, size - mid);
+
+    free(left);
+    free(right);
 }
 
 char loading(int i)
@@ -141,9 +203,12 @@ char *porcentagemBarra(int qntdTestes, int total, int tamanhoBarra)
 void escreverEmArquivo(double *tempo, int qntdDeTestes)
 {
     double tempoMedio = 0;
-    char *nomeDoArquivo = (char *)malloc(20 * sizeof(char));
+    char *nomeDoArquivo = (char *)malloc((20) * sizeof(char));
+    printf("\nInsira o nome para o arquivo a ser gerado com os tempos e o tempo medio: ");
+    fgets(nomeDoArquivo, 20, stdin);
+    nomeDoArquivo[strcspn(nomeDoArquivo, "\n")] = '\0';
+    sprintf(nomeDoArquivo + strlen(nomeDoArquivo), ".txt");
     srand(time(NULL));
-    sprintf(nomeDoArquivo, "Tempos%i.txt", rand() % 100);
     FILE *arquivoDeTempo = fopen(nomeDoArquivo, "w");
     if (arquivoDeTempo == NULL)
     {
