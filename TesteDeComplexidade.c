@@ -12,6 +12,7 @@ char *porcentagemBarra(int qntdTestes, int total, int tamanhoBarra);
 void escreverEmArquivo(double *tempo, int qntdDeTestes, long int n, int i);
 double **MMQ(double *temposMedios, double *tamanhosN);
 void temposMedios(double *temposMedios, int qntTamanhos);
+
 int main()
 {
     int qntdTestes = 100;
@@ -233,7 +234,7 @@ void escreverEmArquivo(double *tempo, int qntdDeTestes, long int n, int i)
     fprintf(arquivoDeTempo, "\nTempo medio do algoritmo: %f", tempoMedio);
     fclose(arquivoDeTempo);
 }
-
+//Função que vai armazenar os tempos medios dos arquivos gerados anteriormente em um array de tempos medios
 void temposMedios(double *temposMedios, int qntTamanhos)
 {
     char *nomeDoArquivo = (char*)malloc(20*sizeof(char));
@@ -257,6 +258,7 @@ void temposMedios(double *temposMedios, int qntTamanhos)
     }
 }
 
+//Função a qual será usada para realizar o calculo do MMQ de uma matriz
 double **MMQ(double *temposMedios, double *tamanhosN)
 {
     double **matriz = (double **)malloc((sizeof(tamanhosN)) * sizeof(double *));
