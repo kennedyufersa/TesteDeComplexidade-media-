@@ -3,22 +3,29 @@
 #include <time.h>
 #include <string.h>
 
-double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada, int tamanho, int seed);
+double *complexidadeMedia(void(func)(int *, int, int), int qntdVezesTestada, long int tamanho, int seed);
 void insertionSort(int *arr, int n);
-void merge(int arr[], int left[], int left_size, int right[], int right_size);
-void merge_sort(int arr[], int size);
+void merge(int arr[], int l, int m, int r);
+void merge_sort(int arr[], int l, int r);
 char loading(int i);
 char *porcentagemBarra(int qntdTestes, int total, int tamanhoBarra);
-void escreverEmArquivo(double *tempo, int qntdDeTestes);
-
+void escreverEmArquivo(double *tempo, int qntdDeTestes, long int n, int i);
+double **MMQ(double *temposMedios, double *tamanhosN);
+void temposMedios(double *temposMedios, int qntTamanhos);
 int main()
 {
-    int qntdTestes = 5;
-    int tamanho = 1000000;
-     double *tempos = complexidadeMedia(insertionSort, qntdTestes, tamanho, rand() % tamanho);
-    //double *tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, rand() % tamanho);
-    escreverEmArquivo(tempos, qntdTestes);
-
+    int qntdTestes = 100;
+    long int tamanho = 2000;
+    double *tempos;
+    long int tamanhos[10];
+    double *temposMediosVet = (double*)malloc(10*sizeof(double));
+    for (int i = 0; i < 10; tamanho *= 2, i++)
+    {
+        tamanhos[i] = tamanho;
+        /* tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, time(NULL));
+        escreverEmArquivo(tempos, qntdTestes, tamanho, i); */
+    }
+    temposMedios(temposMediosVet,10);
     free(tempos);
 }
 
@@ -35,7 +42,7 @@ int *geradorRandom(int seed, int qntd)
 }
 
 // Essa função deve retornar um vetor de tempos do algoritmo que está sendo passado
-double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada, int tamanho, int seed)
+double *complexidadeMedia(void(func)(int *, int, int), int qntdVezesTestada, long int tamanho, int seed)
 {
     clock_t start_time, end_time;
     int i, j;
@@ -67,7 +74,7 @@ double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada, int tama
 
         // Nesta parte do codigo iniciamos a cronometragem de quanto tempo leva o algoritmo de ordenação em questão para ordenar o vetor passado
         start_time = clock();
-        func(array, tamanho);
+        func(array, 0, tamanho - 1);
         end_time = clock();
         // Encerra-se a cronometragem do tempo de execução do algoritmo e armazenamos na variavel "tempoPassado" que depois é armazenado em um vetor com os tempos
         double tempoPassado = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
@@ -78,7 +85,6 @@ double *complexidadeMedia(void(func)(int *, int), int qntdVezesTestada, int tama
     free(array);
     return tempos;
 }
-
 
 // Teste com insertion sort
 void insertionSort(int *arr, int n)
@@ -100,67 +106,67 @@ void insertionSort(int *arr, int n)
     }
 }
 
-void merge(int arr[], int left[], int left_size, int right[], int right_size)
+void merge(int arr[], int l, int m, int r)
 {
-    int i = 0, j = 0, k = 0;
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 = r - m;
 
-    while (i < left_size && j < right_size)
+    int *L = (int *)malloc(sizeof(int) * n1);
+    int *R = (int *)malloc(sizeof(int) * n2);
+
+    for (i = 0; i < n1; i++)
+        L[i] = arr[l + i];
+    for (j = 0; j < n2; j++)
+        R[j] = arr[m + 1 + j];
+
+    i = 0;
+    j = 0;
+    k = l;
+    while (i < n1 && j < n2)
     {
-        if (left[i] <= right[j])
+        if (L[i] <= R[j])
         {
-            arr[k] = left[i];
+            arr[k] = L[i];
             i++;
         }
         else
         {
-            arr[k] = right[j];
+            arr[k] = R[j];
             j++;
         }
         k++;
     }
 
-    while (i < left_size)
+    while (i < n1)
     {
-        arr[k] = left[i];
+        arr[k] = L[i];
         i++;
         k++;
     }
 
-    while (j < right_size)
+    while (j < n2)
     {
-        arr[k] = right[j];
+        arr[k] = R[j];
         j++;
         k++;
     }
+
+    free(L);
+    free(R);
 }
 
-void merge_sort(int arr[], int size)
+void merge_sort(int arr[], int l, int r)
 {
-    if (size <= 1)
+    if (l < r)
     {
-        return;
+        int m = l + (r - l) / 2;
+
+        merge_sort(arr, l, m);
+        merge_sort(arr, m + 1, r);
+
+        merge(arr, l, m, r);
     }
-
-    int mid = size / 2;
-    int *left = (int *)malloc(mid * sizeof(int));
-    int *right = (int *)malloc((size - mid) * sizeof(int));
-
-    for (int i = 0; i < mid; i++)
-    {
-        left[i] = arr[i];
-    }
-
-    for (int i = mid; i < size; i++)
-    {
-        right[i - mid] = arr[i];
-    }
-
-    merge_sort(left, mid);
-    merge_sort(right, size - mid);
-    merge(arr, left, mid, right, size - mid);
-
-    free(left);
-    free(right);
 }
 
 char loading(int i)
@@ -200,14 +206,12 @@ char *porcentagemBarra(int qntdTestes, int total, int tamanhoBarra)
     return barraString;
 }
 // Escreve os tempos em um novo arquivo com nome gerado aleatoriamente
-void escreverEmArquivo(double *tempo, int qntdDeTestes)
+void escreverEmArquivo(double *tempo, int qntdDeTestes, long int n, int i)
 {
     double tempoMedio = 0;
     char *nomeDoArquivo = (char *)malloc((20) * sizeof(char));
-    printf("\nInsira o nome para o arquivo a ser gerado com os tempos e o tempo medio: ");
-    fgets(nomeDoArquivo, 20, stdin);
+    sprintf(nomeDoArquivo, "Tempo%i.txt", i);
     nomeDoArquivo[strcspn(nomeDoArquivo, "\n")] = '\0';
-    sprintf(nomeDoArquivo + strlen(nomeDoArquivo), ".txt");
     srand(time(NULL));
     FILE *arquivoDeTempo = fopen(nomeDoArquivo, "w");
     if (arquivoDeTempo == NULL)
@@ -216,9 +220,11 @@ void escreverEmArquivo(double *tempo, int qntdDeTestes)
         exit(EXIT_FAILURE);
     }
 
+    fprintf(arquivoDeTempo, "\nTamanho do problema \t Tempo\n");
+
     for (int i = 0; i < qntdDeTestes; i++)
     {
-        fprintf(arquivoDeTempo, "\nTempo [%i] = %f", i + 1, tempo[i]);
+        fprintf(arquivoDeTempo, "\n\t\t%li   \t\t   %f", n, tempo[i]);
         tempoMedio += tempo[i];
     }
 
@@ -226,4 +232,36 @@ void escreverEmArquivo(double *tempo, int qntdDeTestes)
 
     fprintf(arquivoDeTempo, "\nTempo medio do algoritmo: %f", tempoMedio);
     fclose(arquivoDeTempo);
+}
+
+void temposMedios(double *temposMedios, int qntTamanhos)
+{
+    char *nomeDoArquivo = (char*)malloc(20*sizeof(char));
+    FILE *arch;
+    char linha[100];
+    char *linhaAlvo = "Tempo medio do algoritmo:";
+    for (int i = 0; i < qntTamanhos; i++)
+    {
+        sprintf(nomeDoArquivo, "Tempo%i.txt", i);
+        arch = fopen(nomeDoArquivo, "r");
+        while (fgets(linha, sizeof(linha), arch))
+        {
+            if (strstr(linha, linhaAlvo))
+            {
+                char *string = strstr(linha, ":") + 1;
+                temposMedios[i] = atof(string);
+                printf("\nTempo: %f", temposMedios[i]);
+                break;
+            }
+        }
+    }
+}
+
+double **MMQ(double *temposMedios, double *tamanhosN)
+{
+    double **matriz = (double **)malloc((sizeof(tamanhosN)) * sizeof(double *));
+    for (int i = 0; i < sizeof(tamanhosN); i++)
+    {
+        matriz[i] = (double *)malloc((sizeof(tamanhosN)) * sizeof(double));
+    }
 }
