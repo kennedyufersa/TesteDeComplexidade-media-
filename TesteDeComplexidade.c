@@ -12,6 +12,7 @@ char *porcentagemBarra(int qntdTestes, int total, int tamanhoBarra);
 void escreverEmArquivo(double *tempo, int qntdDeTestes, long int n, int i);
 double **MMQ(double *temposMedios, long int *tamanhosN, int testes);
 void temposMediosGet(double *temposMedios, int qntTamanhos);
+int **transposta(int **A, int linhas, int colunas);
 
 int main()
 {
@@ -24,8 +25,8 @@ int main()
     for (int i = 0; i < testes; tamanho *= 2, i++)
     {
         tamanhos[i] = tamanho;
-        /*  tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, time(NULL));
-         escreverEmArquivo(tempos, qntdTestes, tamanho, i); */
+      /*   tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, time(NULL));
+        escreverEmArquivo(tempos, qntdTestes, tamanho, i); */
     }
     temposMediosGet(temposMediosVet, 10);
     MMQ(temposMediosVet, tamanhos, testes);
@@ -263,30 +264,79 @@ void temposMediosGet(double *temposMedios, int qntTamanhos)
 // Função a qual será usada para realizar o calculo do MMQ de uma matriz
 double **MMQ(double *temposMedios, long int *tamanhosN, int testes)
 {
+
+    // Alocação para matriz dos tempos e tamanhos testados no algoritmo de ordenação
     double **matriz = (double **)malloc(testes * sizeof(double *));
+
+    // Matriz para armazenar tempos de cada teste
+    double **y = (double **)malloc(testes * sizeof(double *));
+    double **x = (double **)malloc(2 * sizeof(double *));
+    // Matriz para calculo da transposta
+    int **A = (int **)malloc(testes * sizeof(int *));
+
     for (int i = 0; i < testes; i++)
     {
+
         matriz[i] = (double *)malloc(2 * sizeof(double));
+        A[i] = (int *)malloc(2 * sizeof(int));
+        y[i] = (double *)malloc(sizeof(double));
+        if (i < 2)
+        {
+            x[i] = (double *)malloc(sizeof(double));
+        }
     }
 
     for (int i = 0; i < testes; i++)
     {
         matriz[i][0] = tamanhosN[i];
         matriz[i][1] = temposMedios[i];
+        A[i][0] = 1;
+        A[i][1] = tamanhosN[i];
+        y[i][0] = temposMedios[i];
     }
     printf("\n");
-    for (int i = 0; i < testes; i++)
+   /*  for (int i = 0; i < testes; i++)
     {
         for (int j = 0; j < 2; j++)
         {
             if (j == 0)
             {
-                printf(" %.0f ", matriz[i][j]/1000);
-            } else {
+                printf(" %.0f ", matriz[i][j] / 1000);
+            }
+            else
+            {
                 printf(" %.2f ", matriz[i][j]);
-                
             }
         }
         printf("\n");
+    } */
+
+    int **Atransposta = transposta(A, testes, 2);
+    for (int i = 0; i < 2; i++)
+    {
+        for (int j = 0; j < testes; j++)
+        {
+            printf(" %i ", Atransposta[i][j]);
+        }
+        printf("\n");
     }
+}
+
+int **transposta(int **A, int linhas, int colunas)
+{
+    int **transposta = (int **)malloc(colunas * sizeof(int *));
+    for (int i = 0; i < colunas; i++)
+    {
+        transposta[i] = (int *)malloc(linhas * sizeof(int));
+    }
+
+    for (int i = 0; i < linhas; i++)
+    {
+        for (int j = 0; j < colunas; j++)
+        {
+            transposta[j][i] = A[i][j];
+        }
+    }
+
+    return transposta;
 }
