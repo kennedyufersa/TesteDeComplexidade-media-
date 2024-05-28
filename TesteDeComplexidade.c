@@ -10,23 +10,25 @@ void merge_sort(int arr[], int l, int r);
 char loading(int i);
 char *porcentagemBarra(int qntdTestes, int total, int tamanhoBarra);
 void escreverEmArquivo(double *tempo, int qntdDeTestes, long int n, int i);
-double **MMQ(double *temposMedios, double *tamanhosN);
-void temposMedios(double *temposMedios, int qntTamanhos);
+double **MMQ(double *temposMedios, long int *tamanhosN, int testes);
+void temposMediosGet(double *temposMedios, int qntTamanhos);
 
 int main()
 {
     int qntdTestes = 100;
     long int tamanho = 2000;
+    int testes = 10;
     double *tempos;
-    long int tamanhos[10];
-    double *temposMediosVet = (double*)malloc(10*sizeof(double));
-    for (int i = 0; i < 10; tamanho *= 2, i++)
+    long int *tamanhos = (long int *)malloc(10 * sizeof(long int));
+    double *temposMediosVet = (double *)malloc(10 * sizeof(double));
+    for (int i = 0; i < testes; tamanho *= 2, i++)
     {
         tamanhos[i] = tamanho;
-        /* tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, time(NULL));
-        escreverEmArquivo(tempos, qntdTestes, tamanho, i); */
+        /*  tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, time(NULL));
+         escreverEmArquivo(tempos, qntdTestes, tamanho, i); */
     }
-    temposMedios(temposMediosVet,10);
+    temposMediosGet(temposMediosVet, 10);
+    MMQ(temposMediosVet, tamanhos, testes);
     free(tempos);
 }
 
@@ -234,10 +236,10 @@ void escreverEmArquivo(double *tempo, int qntdDeTestes, long int n, int i)
     fprintf(arquivoDeTempo, "\nTempo medio do algoritmo: %f", tempoMedio);
     fclose(arquivoDeTempo);
 }
-//Função que vai armazenar os tempos medios dos arquivos gerados anteriormente em um array de tempos medios
-void temposMedios(double *temposMedios, int qntTamanhos)
+// Função que vai armazenar os tempos medios dos arquivos gerados anteriormente em um array de tempos medios
+void temposMediosGet(double *temposMedios, int qntTamanhos)
 {
-    char *nomeDoArquivo = (char*)malloc(20*sizeof(char));
+    char *nomeDoArquivo = (char *)malloc(20 * sizeof(char));
     FILE *arch;
     char linha[100];
     char *linhaAlvo = "Tempo medio do algoritmo:";
@@ -251,19 +253,40 @@ void temposMedios(double *temposMedios, int qntTamanhos)
             {
                 char *string = strstr(linha, ":") + 1;
                 temposMedios[i] = atof(string);
-                printf("\nTempo: %f", temposMedios[i]);
+                printf("\nTempo [%i]: %f", i, temposMedios[i]);
                 break;
             }
         }
     }
 }
 
-//Função a qual será usada para realizar o calculo do MMQ de uma matriz
-double **MMQ(double *temposMedios, double *tamanhosN)
+// Função a qual será usada para realizar o calculo do MMQ de uma matriz
+double **MMQ(double *temposMedios, long int *tamanhosN, int testes)
 {
-    double **matriz = (double **)malloc((sizeof(tamanhosN)) * sizeof(double *));
-    for (int i = 0; i < sizeof(tamanhosN); i++)
+    double **matriz = (double **)malloc(testes * sizeof(double *));
+    for (int i = 0; i < testes; i++)
     {
-        matriz[i] = (double *)malloc((sizeof(tamanhosN)) * sizeof(double));
+        matriz[i] = (double *)malloc(2 * sizeof(double));
+    }
+
+    for (int i = 0; i < testes; i++)
+    {
+        matriz[i][0] = tamanhosN[i];
+        matriz[i][1] = temposMedios[i];
+    }
+    printf("\n");
+    for (int i = 0; i < testes; i++)
+    {
+        for (int j = 0; j < 2; j++)
+        {
+            if (j == 0)
+            {
+                printf(" %.0f ", matriz[i][j]/1000);
+            } else {
+                printf(" %.2f ", matriz[i][j]);
+                
+            }
+        }
+        printf("\n");
     }
 }
