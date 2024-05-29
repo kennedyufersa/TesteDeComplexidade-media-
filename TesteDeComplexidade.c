@@ -12,7 +12,10 @@ char *porcentagemBarra(int qntdTestes, int total, int tamanhoBarra);
 void escreverEmArquivo(double *tempo, int qntdDeTestes, long int n, int i);
 double **MMQ(double *temposMedios, long int *tamanhosN, int testes);
 void temposMediosGet(double *temposMedios, int qntTamanhos);
-int **transposta(int **A, int linhas, int colunas);
+double **calcularTransposta(double **A, int linhas, int colunas);
+double **ProdutoEquacaoDeMatrizes(double **A, double **AT, double **y, int t, int linhas);
+double **produtoEntreMatrizes(double **A, double **AT, int linhasA, int colunasA, int colunasB);
+double **calcularInversa(double **matriz, double **inversa, int n);
 
 int main()
 {
@@ -25,8 +28,8 @@ int main()
     for (int i = 0; i < testes; tamanho *= 2, i++)
     {
         tamanhos[i] = tamanho;
-      /*   tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, time(NULL));
-        escreverEmArquivo(tempos, qntdTestes, tamanho, i); */
+        /*  tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, time(NULL));
+       escreverEmArquivo(tempos, qntdTestes, tamanho, i);   */
     }
     temposMediosGet(temposMediosVet, 10);
     MMQ(temposMediosVet, tamanhos, testes);
@@ -272,13 +275,13 @@ double **MMQ(double *temposMedios, long int *tamanhosN, int testes)
     double **y = (double **)malloc(testes * sizeof(double *));
     double **x = (double **)malloc(2 * sizeof(double *));
     // Matriz para calculo da transposta
-    int **A = (int **)malloc(testes * sizeof(int *));
+    double **A = (double **)malloc(testes * sizeof(double *));
 
     for (int i = 0; i < testes; i++)
     {
 
         matriz[i] = (double *)malloc(2 * sizeof(double));
-        A[i] = (int *)malloc(2 * sizeof(int));
+        A[i] = (double *)malloc(2 * sizeof(double));
         y[i] = (double *)malloc(sizeof(double));
         if (i < 2)
         {
@@ -295,39 +298,41 @@ double **MMQ(double *temposMedios, long int *tamanhosN, int testes)
         y[i][0] = temposMedios[i];
     }
     printf("\n");
-   /*  for (int i = 0; i < testes; i++)
-    {
-        for (int j = 0; j < 2; j++)
-        {
-            if (j == 0)
-            {
-                printf(" %.0f ", matriz[i][j] / 1000);
-            }
-            else
-            {
-                printf(" %.2f ", matriz[i][j]);
-            }
-        }
-        printf("\n");
-    } */
+    /*  for (int i = 0; i < testes; i++)
+     {
+         for (int j = 0; j < 2; j++)
+         {
+             if (j == 0)
+             {
+                 printf(" %.0f ", matriz[i][j] / 1000);
+             }
+             else
+             {
+                 printf(" %.2f ", matriz[i][j]);
+             }
+         }
+         printf("\n");
+     } */
 
-    int **Atransposta = transposta(A, testes, 2);
+    double **Atransposta = calcularTransposta(A, testes, 2);
+    ProdutoEquacaoDeMatrizes(A, Atransposta, y, 2, testes);
+
     for (int i = 0; i < 2; i++)
     {
         for (int j = 0; j < testes; j++)
         {
-            printf(" %i ", Atransposta[i][j]);
+            printf(" %f ", Atransposta[i][j]);
         }
         printf("\n");
     }
 }
 
-int **transposta(int **A, int linhas, int colunas)
+double **calcularTransposta(double **A, int linhas, int colunas)
 {
-    int **transposta = (int **)malloc(colunas * sizeof(int *));
+    double **transposta = (double **)malloc(colunas * sizeof(double *));
     for (int i = 0; i < colunas; i++)
     {
-        transposta[i] = (int *)malloc(linhas * sizeof(int));
+        transposta[i] = (double *)malloc(linhas * sizeof(double));
     }
 
     for (int i = 0; i < linhas; i++)
@@ -339,4 +344,104 @@ int **transposta(int **A, int linhas, int colunas)
     }
 
     return transposta;
+}
+
+double **ProdutoEquacaoDeMatrizes(double **A, double **AT, double **y, int t, int linhas)
+{
+    double **x = (double **)malloc(t * sizeof(double *));
+    x[0] = (double *)malloc(sizeof(double));
+    double **produtoAATy;
+    double **inversa;
+    produtoAATy = produtoEntreMatrizes(A, AT, linhas, 2, linhas);
+    inversa = calcularInversa(produtoAATy, inversa, linhas);
+    produtoAATy = produtoEntreMatrizes(produtoAATy, y, linhas, linhas, 2);
+    produtoAATy = produtoEntreMatrizes(inversa, produtoAATy, linhas, linhas, linhas);
+    return produtoAATy;
+}
+
+double **produtoEntreMatrizes(double **A, double **B, int linhasA, int colunasA, int colunasB)
+{
+    double **result = (double **)malloc(linhasA * sizeof(double *));
+    for (int i = 0; i < linhasA; i++)
+        result[i] = (double *)malloc(colunasB * sizeof(double));
+    for (int i = 0; i < linhasA; i++)
+        for (int j = 0; j < colunasB; j++)
+        {
+            result[i][j] = 0;
+            for (int k = 0; k < colunasA; k++)
+                result[i][j] += A[i][k] * B[k][j];
+        }
+    return result;
+}
+
+double **calcularInversa(double **matriz, double **inversa, int n)
+{
+    inversa = (double **)malloc(n * sizeof(double *));
+    for (int i = 0; i < n; i++)
+    {
+
+        inversa[i] = (double *)malloc(n * sizeof(double));
+    }
+
+    double **temp = (double **)malloc(n * sizeof(double *));
+    for (int i = 0; i < n; i++)
+    {
+        temp[i] = (double *)malloc(n * sizeof(double));
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            if (i == j)
+                inversa[i][j] = 1;
+            else
+                inversa[i][j] = 0;
+        }
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            temp[i][j] = matriz[i][j];
+        }
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        double pivo = temp[i][i];
+        if (pivo == 0)
+        {
+            printf("Matriz não é inversível\n");
+            return 0;
+        }
+
+        for (int j = 0; j < n; j++)
+        {
+            temp[i][j] /= pivo;
+            inversa[i][j] /= pivo;
+        }
+
+        for (int k = 0; k < n; k++)
+        {
+            if (k != i)
+            {
+                double fator = temp[k][i];
+                for (int j = 0; j < n; j++)
+                {
+                    temp[k][j] -= fator * temp[i][j];
+                    inversa[k][j] -= fator * inversa[i][j];
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        free(temp[i]);
+    }
+    free(temp);
+
+    return inversa;
 }
