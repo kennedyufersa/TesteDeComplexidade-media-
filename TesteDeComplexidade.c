@@ -13,14 +13,13 @@ void escreverEmArquivo(double *tempo, int qntdDeTestes, long int n, int i);
 double **MMQ(double *temposMedios, long int *tamanhosN, int testes);
 void temposMediosGet(double *temposMedios, int qntTamanhos);
 double **calcularTransposta(double **A, int linhas, int colunas);
-double **ProdutoEquacaoDeMatrizes(double **A, double **AT, double **y, int t, int linhas);
 double **produtoEntreMatrizes(double **A, double **AT, int linhasA, int colunasA, int colunasB);
-double **calcularInversa(double **matriz, double **inversa, int n);
+double **calcularInversa(double **matriz, int n);
 
 int main()
 {
-    int qntdTestes = 100;
-    long int tamanho = 2000;
+    int qntdTestes = 10;
+    long int tamanho = 200;
     int testes = 10;
     double *tempos;
     long int *tamanhos = (long int *)malloc(10 * sizeof(long int));
@@ -28,8 +27,8 @@ int main()
     for (int i = 0; i < testes; tamanho *= 2, i++)
     {
         tamanhos[i] = tamanho;
-        /*  tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, time(NULL));
-       escreverEmArquivo(tempos, qntdTestes, tamanho, i);   */
+        tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, time(NULL));
+        escreverEmArquivo(tempos, qntdTestes, tamanho, i);
     }
     temposMediosGet(temposMediosVet, 10);
     MMQ(temposMediosVet, tamanhos, testes);
@@ -84,7 +83,7 @@ double *complexidadeMedia(void(func)(int *, int, int), int qntdVezesTestada, lon
         func(array, 0, tamanho - 1);
         end_time = clock();
         // Encerra-se a cronometragem do tempo de execução do algoritmo e armazenamos na variavel "tempoPassado" que depois é armazenado em um vetor com os tempos
-        double tempoPassado = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
+        double tempoPassado = ((double)(end_time - start_time)) / CLOCKS_PER_SEC * 1000.0;
         tempos[i] = tempoPassado;
         seed = rand() % tamanho;
         array = geradorRandom(seed, tamanho);
@@ -267,64 +266,46 @@ void temposMediosGet(double *temposMedios, int qntTamanhos)
 // Função a qual será usada para realizar o calculo do MMQ de uma matriz
 double **MMQ(double *temposMedios, long int *tamanhosN, int testes)
 {
-
-    // Alocação para matriz dos tempos e tamanhos testados no algoritmo de ordenação
-    double **matriz = (double **)malloc(testes * sizeof(double *));
-
-    // Matriz para armazenar tempos de cada teste
-    double **y = (double **)malloc(testes * sizeof(double *));
-    double **x = (double **)malloc(2 * sizeof(double *));
-    // Matriz para calculo da transposta
     double **A = (double **)malloc(testes * sizeof(double *));
-
+    double **y = (double **)malloc(testes * sizeof(double *));
     for (int i = 0; i < testes; i++)
     {
-
-        matriz[i] = (double *)malloc(2 * sizeof(double));
         A[i] = (double *)malloc(2 * sizeof(double));
         y[i] = (double *)malloc(sizeof(double));
-        if (i < 2)
-        {
-            x[i] = (double *)malloc(sizeof(double));
-        }
-    }
-
-    for (int i = 0; i < testes; i++)
-    {
-        matriz[i][0] = tamanhosN[i];
-        matriz[i][1] = temposMedios[i];
         A[i][0] = 1;
         A[i][1] = tamanhosN[i];
         y[i][0] = temposMedios[i];
     }
-    printf("\n");
-    /*  for (int i = 0; i < testes; i++)
-     {
-         for (int j = 0; j < 2; j++)
-         {
-             if (j == 0)
-             {
-                 printf(" %.0f ", matriz[i][j] / 1000);
-             }
-             else
-             {
-                 printf(" %.2f ", matriz[i][j]);
-             }
-         }
-         printf("\n");
-     } */
-
+    //Realizando calculos necessarios para resolver o sistema A e B 
     double **Atransposta = calcularTransposta(A, testes, 2);
-    ProdutoEquacaoDeMatrizes(A, Atransposta, y, 2, testes);
+    double **AtA = produtoEntreMatrizes(Atransposta, A, 2, testes, 2);
+    double **AtY = produtoEntreMatrizes(Atransposta, y, 2, testes, 1);
+    double **AtA_inv = calcularInversa(AtA, 2);
+    double **result = produtoEntreMatrizes(AtA_inv, AtY, 2, 2, 1);
+    printf("\n");
+    printf("a = %f\n", result[0][0]);
+    printf("b = %f\n", result[1][0]);
 
+    for (int i = 0; i < testes; i++)
+    {
+        free(A[i]);
+        free(y[i]);
+    }
+    free(A);
+    free(y);
     for (int i = 0; i < 2; i++)
     {
-        for (int j = 0; j < testes; j++)
-        {
-            printf(" %f ", Atransposta[i][j]);
-        }
-        printf("\n");
+        free(Atransposta[i]);
+        free(AtA[i]);
+        free(AtY[i]);
+        free(AtA_inv[i]);
+        free(result[i]);
     }
+    free(Atransposta);
+    free(AtA);
+    free(AtY);
+    free(AtA_inv);
+    free(result);
 }
 
 double **calcularTransposta(double **A, int linhas, int colunas)
@@ -346,18 +327,6 @@ double **calcularTransposta(double **A, int linhas, int colunas)
     return transposta;
 }
 
-double **ProdutoEquacaoDeMatrizes(double **A, double **AT, double **y, int t, int linhas)
-{
-    double **x = (double **)malloc(t * sizeof(double *));
-    x[0] = (double *)malloc(sizeof(double));
-    double **produtoAATy;
-    double **inversa;
-    produtoAATy = produtoEntreMatrizes(A, AT, linhas, 2, linhas);
-    inversa = calcularInversa(produtoAATy, inversa, linhas);
-    produtoAATy = produtoEntreMatrizes(produtoAATy, y, linhas, linhas, 2);
-    produtoAATy = produtoEntreMatrizes(inversa, produtoAATy, linhas, linhas, linhas);
-    return produtoAATy;
-}
 
 double **produtoEntreMatrizes(double **A, double **B, int linhasA, int colunasA, int colunasB)
 {
@@ -374,55 +343,40 @@ double **produtoEntreMatrizes(double **A, double **B, int linhasA, int colunasA,
     return result;
 }
 
-double **calcularInversa(double **matriz, double **inversa, int n)
+double **calcularInversa(double **matriz, int n)
 {
-    inversa = (double **)malloc(n * sizeof(double *));
-    for (int i = 0; i < n; i++)
-    {
-
-        inversa[i] = (double *)malloc(n * sizeof(double));
-    }
-
+    double **inversa = (double **)malloc(n * sizeof(double *));
     double **temp = (double **)malloc(n * sizeof(double *));
     for (int i = 0; i < n; i++)
     {
+        inversa[i] = (double *)malloc(n * sizeof(double));
         temp[i] = (double *)malloc(n * sizeof(double));
-    }
-
-    for (int i = 0; i < n; i++)
-    {
         for (int j = 0; j < n; j++)
         {
             if (i == j)
+            {
                 inversa[i][j] = 1;
+            }
             else
+            {
                 inversa[i][j] = 0;
-        }
-    }
-
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
+            }
             temp[i][j] = matriz[i][j];
         }
     }
-
     for (int i = 0; i < n; i++)
     {
         double pivo = temp[i][i];
         if (pivo == 0)
         {
             printf("Matriz não é inversível\n");
-            return 0;
+            exit(EXIT_FAILURE);
         }
-
         for (int j = 0; j < n; j++)
         {
             temp[i][j] /= pivo;
             inversa[i][j] /= pivo;
         }
-
         for (int k = 0; k < n; k++)
         {
             if (k != i)
@@ -436,12 +390,10 @@ double **calcularInversa(double **matriz, double **inversa, int n)
             }
         }
     }
-
     for (int i = 0; i < n; i++)
     {
         free(temp[i]);
     }
     free(temp);
-
     return inversa;
 }
