@@ -15,7 +15,10 @@ void temposMediosGet(double *temposMedios, int qntTamanhos);
 double **calcularTransposta(double **A, int linhas, int colunas);
 double **produtoEntreMatrizes(double **A, double **AT, int linhasA, int colunasA, int colunasB);
 double **calcularInversa(double **matriz, int n);
-
+double determinant(double **matriz, int n);
+void getCofactor(double **matriz, double **temp, int p, int q, int n);
+int ehInversivel(double **matriz, int n);
+void imprimirMat(double **matriz, int lin, int col);
 int main()
 {
     int qntdTestes = 10;
@@ -27,8 +30,8 @@ int main()
     for (int i = 0; i < testes; tamanho *= 2, i++)
     {
         tamanhos[i] = tamanho;
-        tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, time(NULL));
-        escreverEmArquivo(tempos, qntdTestes, tamanho, i);
+        /* tempos = complexidadeMedia(merge_sort, qntdTestes, tamanho, time(NULL));
+         escreverEmArquivo(tempos, qntdTestes, tamanho, i); */
     }
     temposMediosGet(temposMediosVet, 10);
     MMQ(temposMediosVet, tamanhos, testes);
@@ -238,6 +241,7 @@ void escreverEmArquivo(double *tempo, int qntdDeTestes, long int n, int i)
 
     fprintf(arquivoDeTempo, "\nTempo medio do algoritmo: %f", tempoMedio);
     fclose(arquivoDeTempo);
+    free(nomeDoArquivo);
 }
 // Função que vai armazenar os tempos medios dos arquivos gerados anteriormente em um array de tempos medios
 void temposMediosGet(double *temposMedios, int qntTamanhos)
@@ -271,20 +275,63 @@ double **MMQ(double *temposMedios, long int *tamanhosN, int testes)
     for (int i = 0; i < testes; i++)
     {
         A[i] = (double *)malloc(2 * sizeof(double));
-        y[i] = (double *)malloc(sizeof(double));
+        y[i] = (double *)malloc(2 * sizeof(double));
         A[i][0] = 1;
         A[i][1] = tamanhosN[i];
-        y[i][0] = temposMedios[i];
+        y[i][0] = 1;
+        y[i][1] = temposMedios[i];
     }
-    //Realizando calculos necessarios para resolver o sistema A e B 
-    double **Atransposta = calcularTransposta(A, testes, 2);
-    double **AtA = produtoEntreMatrizes(Atransposta, A, 2, testes, 2);
-    double **AtY = produtoEntreMatrizes(Atransposta, y, 2, testes, 1);
-    double **AtA_inv = calcularInversa(AtA, 2);
-    double **result = produtoEntreMatrizes(AtA_inv, AtY, 2, 2, 1);
+    // Realizando calculos necessarios para resolver o sistema A e B
     printf("\n");
-    printf("a = %f\n", result[0][0]);
-    printf("b = %f\n", result[1][0]);
+    printf("Matriz A: \n");
+    imprimirMat(A, 10, 2);
+    printf("\n");
+    printf("Matriz Y: \n");
+
+    imprimirMat(y, 10, 2);
+    printf("\n");
+
+    double **Atransposta = calcularTransposta(A, testes, 2);
+    printf("Matriz A transposta: \n");
+    imprimirMat(Atransposta, 2, 10);
+    printf("\n");
+    double **AtA = produtoEntreMatrizes(A, Atransposta, testes, 2, testes);
+    printf("Matriz A * A transposta: \n");
+    imprimirMat(AtA,testes, testes);
+    printf("\n");
+    if (ehInversivel(AtA, 2) == 1)
+    {
+
+        double **AtY = produtoEntreMatrizes(Atransposta, y, 2, testes, 2);
+        printf("Matriz A tranposta*y: \n");
+        imprimirMat(AtY, 2, 2);
+        printf("\n");
+        double **AtA_inv = calcularInversa(AtA, 2);
+        printf("Matriz inversa de: A * A transposta: \n");
+        imprimirMat(AtA_inv, 2, 2);
+        printf("\n");
+        double **result = produtoEntreMatrizes(AtA_inv, AtY, 2, 2, 1);
+        printf("\n");
+        printf("a = %f\n", result[0][0]);
+        printf("b = %f\n", result[1][0]);
+        for (int i = 0; i < 2; i++)
+        {
+            free(Atransposta[i]);
+            free(AtA[i]);
+            free(AtY[i]);
+            free(AtA_inv[i]);
+            free(result[i]);
+        }
+        free(Atransposta);
+        free(AtA);
+        free(AtY);
+        free(AtA_inv);
+        free(result);
+    }
+    else
+    {
+        printf("\nA matriz gerada não é inversivel\n");
+    }
 
     for (int i = 0; i < testes; i++)
     {
@@ -293,19 +340,6 @@ double **MMQ(double *temposMedios, long int *tamanhosN, int testes)
     }
     free(A);
     free(y);
-    for (int i = 0; i < 2; i++)
-    {
-        free(Atransposta[i]);
-        free(AtA[i]);
-        free(AtY[i]);
-        free(AtA_inv[i]);
-        free(result[i]);
-    }
-    free(Atransposta);
-    free(AtA);
-    free(AtY);
-    free(AtA_inv);
-    free(result);
 }
 
 double **calcularTransposta(double **A, int linhas, int colunas)
@@ -326,7 +360,6 @@ double **calcularTransposta(double **A, int linhas, int colunas)
 
     return transposta;
 }
-
 
 double **produtoEntreMatrizes(double **A, double **B, int linhasA, int colunasA, int colunasB)
 {
@@ -396,4 +429,97 @@ double **calcularInversa(double **matriz, int n)
     }
     free(temp);
     return inversa;
+}
+
+double determinant(double **matriz, int n)
+{
+    double det = 0;
+
+    // Caso base: se a matriz for 1x1, o determinante é o único elemento
+    if (n == 1)
+    {
+        return matriz[0][0];
+    }
+
+    // Alocando memória para a matriz temporária
+    double **temp = (double **)malloc(n * sizeof(double *));
+    for (int i = 0; i < n; i++)
+    {
+        temp[i] = (double *)malloc(n * sizeof(double));
+    }
+
+    int sign = 1;
+
+    // Iterar para cada elemento da primeira linha
+    for (int f = 0; f < n; f++)
+    {
+        // Obtendo o cofactor da matriz[0][f]
+        getCofactor(matriz, temp, 0, f, n);
+        det += sign * matriz[0][f] * determinant(temp, n - 1);
+
+        // Alternar o sinal
+        sign = -sign;
+    }
+
+    // Liberando memória da matriz temporária
+    for (int i = 0; i < n; i++)
+    {
+        free(temp[i]);
+    }
+    free(temp);
+
+    return det;
+}
+
+void getCofactor(double **matriz, double **temp, int p, int q, int n)
+{
+    int i = 0, j = 0;
+
+    // Iterar para cada elemento da matriz
+    for (int row = 0; row < n; row++)
+    {
+        for (int col = 0; col < n; col++)
+        {
+            // Copiar na matriz temporária apenas os elementos que não estão na linha p e coluna q
+            if (row != p && col != q)
+            {
+                temp[i][j++] = matriz[row][col];
+
+                // Fila é preenchida, aumentar o índice da fila e redefinir o índice da coluna
+                if (j == n - 1)
+                {
+                    j = 0;
+                    i++;
+                }
+            }
+        }
+    }
+}
+
+int ehInversivel(double **matriz, int n)
+{
+    double det = determinant(matriz, n);
+    // printf("\n%f\n", det);
+    if (det != 0)
+    {
+        return 1;
+    }
+    else if (det == 0)
+    {
+        return 0;
+    }
+}
+
+void imprimirMat(double **matriz, int lin, int col)
+{
+    int i, j;
+
+    for (i = 0; i < lin; i++)
+    {
+        for (j = 0; j < col; j++)
+        {
+            printf(" %.2f ", matriz[i][j]);
+        }
+        printf("\n");
+    }
 }
