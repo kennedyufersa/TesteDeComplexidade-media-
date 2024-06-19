@@ -30,28 +30,27 @@ int main()
 {
     int qntdOrdenacoes = 20;
     int tamanho = 10000;
-    int testes = 50;
+    int testes = 20;
     double *tempos;
     int *tamanhos = (int *)malloc(testes * sizeof(int));
     double *temposMediosVet = (double *)malloc(testes * sizeof(double));
     verificarAlocacaoPonteiroint(tamanhos, "ponteiro de tamanhos");
     verificarAlocacaoPonteiroDouble(temposMediosVet, "Ponteiro com tempos medios");
-    for (int i = 0; i < 20; tamanho += 10000, i++)
+    for (int i = 0; i < testes; tamanho += 10000, i++)
     {
         tamanhos[i] = tamanho;
-         /* tempos = complexidadeMedia(merge_sort, qntdOrdenacoes, tamanho, time(NULL));
-        escreverEmArquivo(tempos, qntdOrdenacoes, tamanho, i);  */
+        /* tempos = complexidadeMedia(merge_sort, qntdOrdenacoes, tamanho, time(NULL));
+       escreverEmArquivo(tempos, qntdOrdenacoes, tamanho, i);  */
     }
 
     temposMediosGet(temposMediosVet, testes);
     MMQTerceiroGrau(temposMediosVet, tamanhos, testes);
-    free(tempos);
+    //  free(tempos);
 }
 void geradorRandom(int *array, int seed, int qntd)
 {
     int i = 0;
     srand(seed);
-    
 
     verificarAlocacaoPonteiroint(array, "vetor no gerador random com numeros gerados aleatoriamente");
 
@@ -104,7 +103,7 @@ double *complexidadeMedia(void(func)(int *, int, int), int qntdOrdenacoes, int t
         double tempoPassado = ((double)(end_time - start_time)) / CLOCKS_PER_SEC * 1000.0;
         tempos[i] = tempoPassado;
         seed = rand() % tamanho;
-        geradorRandom(array ,seed, tamanho);
+        geradorRandom(array, seed, tamanho);
     }
     free(array);
     return tempos;
@@ -248,7 +247,7 @@ void escreverEmArquivo(double *tempo, int qntTempos, int n, int i)
 
     for (int i = 0; i < qntTempos; i++)
     {
-        fprintf(arquivoDeTempo, "\n\t\t%li   \t\t   %f", n, tempo[i]);
+        fprintf(arquivoDeTempo, "\n\t\t%i   \t\t   %f", n, tempo[i]);
         tempoMedio += tempo[i];
     }
 
@@ -304,16 +303,16 @@ double **MMQPrimeiroGrau(double *temposMedios, int *tamanhosN, int testes)
     // Realizando calculos necessarios para resolver o sistema A e B
     printf("\n");
     printf("Matriz A: \n");
-    imprimirMat(A, 10, 2, 5);
+    imprimirMat(A, testes, 2, 5);
     printf("\n");
     printf("Matriz Y: \n");
 
-    imprimirMat(y, 10, 2, 5);
+    imprimirMat(y, testes, 2, 5);
     printf("\n");
 
     double **Atransposta = calcularTransposta(A, testes, 2);
     printf("Matriz A transposta: \n");
-    imprimirMat(Atransposta, 2, 10, 4);
+    imprimirMat(Atransposta, 2, testes, 4);
     printf("\n");
     double **AtA = produtoEntreMatrizes(A, Atransposta, testes, 2, testes);
     printf("Matriz A * A transposta: \n");
@@ -384,16 +383,16 @@ double **MMQSegundoGrau(double *temposMedios, int *tamanhosN, int testes)
     // Realizando calculos necessarios para resolver o sistema A, B e C
     printf("\n\n");
     printf("Matriz A: \n");
-    imprimirMat(A, 10, 3, 5);
+    imprimirMat(A, testes, 3, 5);
     printf("\n");
     printf("Matriz Y: \n");
 
-    imprimirMat(y, 10, 3, 6);
+    imprimirMat(y, testes, 3, 6);
     printf("\n");
 
     double **Atransposta = calcularTransposta(A, testes, 3);
     printf("Matriz A transposta: \n");
-    imprimirMat(Atransposta, 3, 10, 6);
+    imprimirMat(Atransposta, 3, testes, 6);
     printf("\n");
     double **AtA = produtoEntreMatrizes(A, Atransposta, testes, 3, testes);
     printf("Matriz A * A transposta: \n");
@@ -416,6 +415,91 @@ double **MMQSegundoGrau(double *temposMedios, int *tamanhosN, int testes)
         printf("b = %s\n", extrairDoisPrimeirosDigitos(result[1][0], 3));
         printf("c = %s\n", extrairDoisPrimeirosDigitos(result[2][0], 3));
         for (int i = 0; i < 3; i++)
+        {
+            free(Atransposta[i]);
+            free(AtA[i]);
+            free(AtY[i]);
+            free(AtA_inv[i]);
+            free(result[i]);
+        }
+        free(Atransposta);
+        free(AtA);
+        free(AtY);
+        free(AtA_inv);
+        free(result);
+    }
+    else
+    {
+        printf("\nA matriz gerada não é inversivel\n");
+    }
+
+    for (int i = 0; i < testes; i++)
+    {
+        free(A[i]);
+        free(y[i]);
+    }
+    free(A);
+    free(y);
+}
+
+double **MMQTerceiroGrau(double *temposMedios, int *tamanhosN, int testes)
+{
+    double **A = (double **)malloc(testes * sizeof(double *));
+    double **y = (double **)malloc(testes * sizeof(double *));
+    verificarAlocacaoMatriz(A, "Matriz A MMQ");
+    verificarAlocacaoMatriz(y, "Matriz y MMQ");
+    for (int i = 0; i < testes; i++)
+    {
+        A[i] = (double *)malloc(4 * sizeof(double));
+        y[i] = (double *)malloc(4 * sizeof(double));
+        verificarAlocacaoPonteiroDouble(A[i], "colunas da matriz A");
+        verificarAlocacaoPonteiroDouble(y[i], "colunas da matriz y");
+        A[i][0] = 1;
+        A[i][1] = tamanhosN[i];
+        A[i][2] = pow(tamanhosN[i], 2);
+        A[i][3] = pow(tamanhosN[i], 3);
+        y[i][0] = 1;
+        y[i][1] = temposMedios[i];
+        y[i][2] = pow(temposMedios[i], 2);
+        y[i][3] = pow(temposMedios[i], 3); 
+    }
+    // Realizando calculos necessarios para resolver o sistema A, B e C
+    printf("\n\n");
+    printf("Matriz A: \n");
+    imprimirMat(A, testes, 4, 5);
+    printf("\n");
+    printf("Matriz Y: \n");
+
+    imprimirMat(y, testes, 4, 6);
+    printf("\n");
+
+    double **Atransposta = calcularTransposta(A, testes, 4);
+    printf("Matriz A transposta: \n");
+    imprimirMat(Atransposta, 4, testes, 6);
+    printf("\n");
+    double **AtA = produtoEntreMatrizes(A, Atransposta, testes, 4, testes);
+    printf("Matriz A * A transposta: \n");
+    imprimirMat(AtA, testes, testes, 6);
+    printf("\n");
+    if (ehInversivel(AtA, 4) == 1)
+    {
+
+        double **AtY = produtoEntreMatrizes(Atransposta, y, 4, testes, 4);
+        printf("Matriz A tranposta*y: \n");
+        imprimirMat(AtY, 4, 4, 5);
+        printf("\n");
+        double **AtA_inv = calcularInversa(AtA, 4);
+        printf("Matriz inversa de: A * A transposta: \n");
+        imprimirMat(AtA_inv, 4, 4, 5);
+        printf("\n");
+        double **result = produtoEntreMatrizes(AtA_inv, AtY, 4, 4, 1);
+        printf("\n");
+        printf("a = %s\n", extrairDoisPrimeirosDigitos(result[0][0], 4));
+        printf("b = %s\n", extrairDoisPrimeirosDigitos(result[1][0], 4));
+        printf("c = %s\n", extrairDoisPrimeirosDigitos(result[2][0], 4));
+        printf("d = %s\n", extrairDoisPrimeirosDigitos(result[3][0], 4));
+
+        for (int i = 0; i < 4; i++)
         {
             free(Atransposta[i]);
             free(AtA[i]);
@@ -685,89 +769,4 @@ void verificarAlocacaoMatriz(double **ptrr, char *local)
         printf("\nFalha na alocação de memoria %s", local);
         exit(EXIT_FAILURE);
     }
-}
-
-double **MMQTerceiroGrau(double *temposMedios, int *tamanhosN, int testes){
-    double **A = (double **)malloc(testes * sizeof(double *));
-    double **y = (double **)malloc(testes * sizeof(double *));
-    verificarAlocacaoMatriz(A, "Matriz A MMQ");
-    verificarAlocacaoMatriz(y, "Matriz y MMQ");
-    for (int i = 0; i < testes; i++)
-    {
-        A[i] = (double *)malloc(4 * sizeof(double));
-        y[i] = (double *)malloc(4 * sizeof(double));
-        verificarAlocacaoPonteiroDouble(A[i], "colunas da matriz A");
-        verificarAlocacaoPonteiroDouble(y[i], "colunas da matriz y");
-        A[i][0] = 1;
-        A[i][1] = tamanhosN[i];
-        A[i][2] = pow(tamanhosN[i], 2);
-        A[i][3] = pow(tamanhosN[i], 3);
-        y[i][0] = 1;
-        y[i][1] = temposMedios[i];
-        y[i][2] = pow(temposMedios[i], 2);
-        y[i][3] = pow(temposMedios[i], 3);
-
-    }
-    // Realizando calculos necessarios para resolver o sistema A, B e C
-    printf("\n\n");
-    printf("Matriz A: \n");
-    imprimirMat(A, 10, 4, 5);
-    printf("\n");
-    printf("Matriz Y: \n");
-
-    imprimirMat(y, 10, 4, 6);
-    printf("\n");
-
-    double **Atransposta = calcularTransposta(A, testes, 4);
-    printf("Matriz A transposta: \n");
-    imprimirMat(Atransposta, 4, 10, 6);
-    printf("\n");
-    double **AtA = produtoEntreMatrizes(A, Atransposta, testes, 4, testes);
-    printf("Matriz A * A transposta: \n");
-    imprimirMat(AtA, testes, testes, 6);
-    printf("\n");
-    if (ehInversivel(AtA, 4) == 1)
-    {
-
-        double **AtY = produtoEntreMatrizes(Atransposta, y, 4, testes, 4);
-        printf("Matriz A tranposta*y: \n");
-        imprimirMat(AtY, 4, 4, 5);
-        printf("\n");
-        double **AtA_inv = calcularInversa(AtA, 4);
-        printf("Matriz inversa de: A * A transposta: \n");
-        imprimirMat(AtA_inv, 4, 4, 5);
-        printf("\n");
-        double **result = produtoEntreMatrizes(AtA_inv, AtY, 4, 4, 1);
-        printf("\n");
-        printf("a = %s\n", extrairDoisPrimeirosDigitos(result[0][0], 4));
-        printf("b = %s\n", extrairDoisPrimeirosDigitos(result[1][0], 4));
-        printf("c = %s\n", extrairDoisPrimeirosDigitos(result[2][0], 4));
-        printf("d = %s\n", extrairDoisPrimeirosDigitos(result[3][0], 4));
-
-        for (int i = 0; i < 4; i++)
-        {
-            free(Atransposta[i]);
-            free(AtA[i]);
-            free(AtY[i]);
-            free(AtA_inv[i]);
-            free(result[i]);
-        }
-        free(Atransposta);
-        free(AtA);
-        free(AtY);
-        free(AtA_inv);
-        free(result);
-    }
-    else
-    {
-        printf("\nA matriz gerada não é inversivel\n");
-    }
-
-    for (int i = 0; i < testes; i++)
-    {
-        free(A[i]);
-        free(y[i]);
-    }
-    free(A);
-    free(y);
 }
