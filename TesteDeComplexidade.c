@@ -22,11 +22,11 @@ void temposMediosGet(double *temposMedios, int qntTamanhos);
 double **calcularTransposta(double **A, int linhas, int colunas);
 double **produtoEntreMatrizes(double **A, double **AT, int linhasA, int colunasA, int colunasB);
 double **calcularInversa(double **matriz, int n);
-double determinant(double **matriz, int n);
-void getCofactor(double **matriz, double **temp, int p, int q, int n);
-int ehInversivel(double **matriz, int n);
 void imprimirMat(double **matriz, int lin, int col, int qntDigitos);
 void plotGraphGNU(double *temposMedios, int *tamanhos, int testes);
+int matrizInversivel(double **matriz, int n);
+void liberarMatriz(double **matriz, int linhas);
+double **alocarMatriz(int linhas, int colunas);
 int main()
 {
     int qntdOrdenacoes = 100;
@@ -40,14 +40,14 @@ int main()
     for (int i = 0; i < testes; tamanho += 10000, i++)
     {
         tamanhos[i] = tamanho;
-        tempos = complexidadeMedia(merge_sort, qntdOrdenacoes, tamanho, time(NULL));
-        escreverEmArquivo(tempos, qntdOrdenacoes, tamanho, i);
+        /*  tempos = complexidadeMedia(merge_sort, qntdOrdenacoes, tamanho, time(NULL));
+         escreverEmArquivo(tempos, qntdOrdenacoes, tamanho, i); */
     }
 
     temposMediosGet(temposMediosVet, testes);
     MMQSegundoGrau(temposMediosVet, tamanhos, testes);
     plotGraphGNU(temposMediosVet, tamanhos, testes);
-    free(tempos);
+    // free(tempos);
 }
 void geradorRandom(int *array, int seed, int qntd)
 {
@@ -319,7 +319,7 @@ double **MMQPrimeiroGrau(double *temposMedios, int *tamanhosN, int testes)
     printf("Matriz A * A transposta: \n");
     imprimirMat(AtA, testes, testes, 4);
     printf("\n");
-    if (ehInversivel(AtA, 2) == 1)
+    if (matrizInversivel(AtA, testes))
     {
 
         double **AtY = produtoEntreMatrizes(Atransposta, y, 2, testes, 2);
@@ -399,14 +399,15 @@ double **MMQSegundoGrau(double *temposMedios, int *tamanhosN, int linhas)
     printf("Matriz A * A transposta: \n");
     imprimirMat(AtA, linhas, linhas, 6);
     printf("\n");
-    if (ehInversivel(AtA, 3) == 1)
-    {
 
-        double **AtY = produtoEntreMatrizes(Atransposta, y, 3, linhas, 1);
-        printf("Matriz A tranposta*y: \n");
-        imprimirMat(AtY, 3, 1, 5);
-        printf("\n");
-        double **AtA_inv = calcularInversa(AtA, linhas);
+    double **AtY = produtoEntreMatrizes(Atransposta, y, 3, linhas, 1);
+    printf("Matriz A tranposta*y: \n");
+    imprimirMat(AtY, 3, 1, 5);
+    printf("\n");
+    if (matrizInversivel(AtA, 3))
+    {
+        printf("\nA matriz eh inversivel.\n");
+        double **AtA_inv = calcularInversa(AtA, 3);
         printf("Matriz inversa de: A * A transposta: \n");
         imprimirMat(AtA_inv, 3, 3, 5);
         printf("\n");
@@ -415,8 +416,6 @@ double **MMQSegundoGrau(double *temposMedios, int *tamanhosN, int linhas)
         printf("a = %s\n", extrairDoisPrimeirosDigitos(result[0][0], 3));
         printf("b = %s\n", extrairDoisPrimeirosDigitos(result[1][0], 3));
         printf("c = %s\n", extrairDoisPrimeirosDigitos(result[2][0], 3));
-        printf("d = %s\n", extrairDoisPrimeirosDigitos(result[3][0], 3));
-
         for (int i = 0; i < 3; i++)
         {
             free(Atransposta[i]);
@@ -433,7 +432,7 @@ double **MMQSegundoGrau(double *temposMedios, int *tamanhosN, int linhas)
     }
     else
     {
-        printf("\nA matriz gerada não é inversivel\n");
+        printf("\nA matriz nao eh inversivel.\n");
     }
 
     for (int i = 0; i < linhas; i++)
@@ -483,7 +482,7 @@ double **MMQTerceiroGrau(double *temposMedios, int *tamanhosN, int linhas)
     printf("Matriz A * A transposta: \n");
     imprimirMat(AtA, linhas, linhas, 6);
     printf("\n");
-    if (ehInversivel(AtA, 4) == 1)
+    if (matrizInversivel(AtA, linhas))
     {
 
         double **AtY = produtoEntreMatrizes(Atransposta, y, 4, linhas, 1);
@@ -574,154 +573,101 @@ double **produtoEntreMatrizes(double **A, double **B, int linhasA, int colunasA,
 
 double **calcularInversa(double **matriz, int n)
 {
-    double **inversa = (double **)malloc(n * sizeof(double *));
-    double **temp = (double **)malloc(n * sizeof(double *));
-    verificarAlocacaoMatriz(inversa, "Matriz inversa");
-    verificarAlocacaoMatriz(temp, "Matriz temp na inversa");
+    double **inversa = alocarMatriz(n, n);
     for (int i = 0; i < n; i++)
     {
-        inversa[i] = (double *)malloc(n * sizeof(double));
-        temp[i] = (double *)malloc(n * sizeof(double));
-        verificarAlocacaoPonteiroDouble(inversa[i], "colunas da matriz inversa");
-        verificarAlocacaoPonteiroDouble(temp[i], "colunas da matriz temp na inversa");
         for (int j = 0; j < n; j++)
         {
-            if (i == j)
-            {
-                inversa[i][j] = 1;
-            }
-            else
-            {
-                inversa[i][j] = 0;
-            }
-            temp[i][j] = matriz[i][j];
+            inversa[i][j] = (i == j) ? 1.0 : 0.0;
         }
     }
-    for (int i = 0; i < n; i++)
+
+    for (int k = 0; k < n; k++)
     {
-        double pivo = temp[i][i];
-        if (pivo == 0)
+        int max_row = k;
+        for (int i = k + 1; i < n; i++)
         {
-            printf("Matriz não é inversível\n");
-            exit(EXIT_FAILURE);
+            if (fabs(matriz[i][k]) > fabs(matriz[max_row][k]))
+            {
+                max_row = i;
+            }
         }
+
+        if (max_row != k)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                double temp = matriz[k][j];
+                matriz[k][j] = matriz[max_row][j];
+                matriz[max_row][j] = temp;
+
+                temp = inversa[k][j];
+                inversa[k][j] = inversa[max_row][j];
+                inversa[max_row][j] = temp;
+            }
+        }
+
+        double pivot = matriz[k][k];
+        if (pivot == 0.0)
+        {
+            printf("Erro: Pivô zero encontrado. A matriz não é inversível.\n");
+            liberarMatriz(inversa, n);
+            return NULL;
+        }
+
         for (int j = 0; j < n; j++)
         {
-            temp[i][j] /= pivo;
-            inversa[i][j] /= pivo;
+            matriz[k][j] /= pivot;
+            inversa[k][j] /= pivot;
         }
-        for (int k = 0; k < n; k++)
+
+        for (int i = k + 1; i < n; i++)
         {
-            if (k != i)
+            double factor = matriz[i][k];
+            for (int j = 0; j < n; j++)
             {
-                double fator = temp[k][i];
-                for (int j = 0; j < n; j++)
-                {
-                    temp[k][j] -= fator * temp[i][j];
-                    inversa[k][j] -= fator * inversa[i][j];
-                }
+                matriz[i][j] -= factor * matriz[k][j];
+                inversa[i][j] -= factor * inversa[k][j];
             }
         }
     }
-    for (int i = 0; i < n; i++)
+
+    for (int k = n - 1; k > 0; k--)
     {
-        free(temp[i]);
+        for (int i = k - 1; i >= 0; i--)
+        {
+            double factor = matriz[i][k];
+            for (int j = 0; j < n; j++)
+            {
+                matriz[i][j] -= factor * matriz[k][j];
+                inversa[i][j] -= factor * inversa[k][j];
+            }
+        }
     }
-    free(temp);
+
     return inversa;
-}
-
-double determinant(double **matriz, int n)
-{
-    double det = 0;
-
-    // Caso base: se a matriz for 1x1, o determinante é o único elemento
-    if (n == 1)
-    {
-        return matriz[0][0];
-    }
-
-    // Alocando memória para a matriz temporária
-    double **temp = (double **)malloc(n * sizeof(double *));
-    verificarAlocacaoMatriz(temp, "Matriz temp no calculo do determinante");
-
-    for (int i = 0; i < n; i++)
-    {
-        temp[i] = (double *)malloc(n * sizeof(double));
-        verificarAlocacaoPonteiroDouble(temp[i], "colunas da matriz temp no calculo do determinante");
-    }
-
-    int sign = 1;
-
-    // Iterar para cada elemento da primeira linha
-    for (int f = 0; f < n; f++)
-    {
-        // Obtendo o cofactor da matriz[0][f]
-        getCofactor(matriz, temp, 0, f, n);
-        det += sign * matriz[0][f] * determinant(temp, n - 1);
-
-        // Alternar o sinal
-        sign = -sign;
-    }
-
-    // Liberando memória da matriz temporária
-    for (int i = 0; i < n; i++)
-    {
-        free(temp[i]);
-    }
-    free(temp);
-
-    return det;
-}
-
-void getCofactor(double **matriz, double **temp, int p, int q, int n)
-{
-    int i = 0, j = 0;
-
-    // Iterar para cada elemento da matriz
-    for (int row = 0; row < n; row++)
-    {
-        for (int col = 0; col < n; col++)
-        {
-            // Copiar na matriz temporária apenas os elementos que não estão na linha p e coluna q
-            if (row != p && col != q)
-            {
-                temp[i][j++] = matriz[row][col];
-
-                // Fila é preenchida, aumentar o índice da fila e redefinir o índice da coluna
-                if (j == n - 1)
-                {
-                    j = 0;
-                    i++;
-                }
-            }
-        }
-    }
-}
-int ehInversivel(double **matriz, int n)
-{
-    double det = determinant(matriz, n);
-    printf("\n%f\n", det);
-    if (det != 0)
-    {
-        return 1;
-    }
-    else if (det == 0)
-    {
-        return 0;
-    }
 }
 
 void imprimirMat(double **matriz, int lin, int col, int qntDigitos)
 {
-    int i, j;
-    char *numero;
-    for (i = 0; i < lin; i++)
+    if (matriz == NULL)
     {
-        for (j = 0; j < col; j++)
+        printf("Matriz não inicializada\n");
+        return;
+    }
+
+    for (int i = 0; i < lin; i++)
+    {
+        for (int j = 0; j < col; j++)
         {
-            numero = extrairDoisPrimeirosDigitos(matriz[i][j], qntDigitos);
-            printf(" %s ", numero);
+
+            char *numero = extrairDoisPrimeirosDigitos(matriz[i][j], qntDigitos);
+            if (numero != NULL)
+                printf(" %s ", numero);
+            else
+                printf(" Erro na conversão ");
+
+            free(numero);
         }
         printf("\n");
     }
@@ -775,7 +721,6 @@ void verificarAlocacaoMatriz(double **ptrr, char *local)
 
 void plotGraphGNU(double *temposMedios, int *tamanhos, int testes)
 {
-    // Escreve os dados em um arquivo
     FILE *dados = fopen("dados.txt", "w");
     if (dados == NULL)
     {
@@ -783,7 +728,6 @@ void plotGraphGNU(double *temposMedios, int *tamanhos, int testes)
         return;
     }
 
-    // Escreve os dados no arquivo
     for (int i = 0; i < testes; i++)
     {
         fprintf(dados, "%i %f\n", tamanhos[i], temposMedios[i]);
@@ -791,31 +735,86 @@ void plotGraphGNU(double *temposMedios, int *tamanhos, int testes)
 
     fclose(dados);
 
-    // Cria o pipe para o Gnuplot
     FILE *gnuplotPipe = popen("gnuplot -persist", "w");
     if (gnuplotPipe == NULL)
     {
         perror("Erro ao abrir o pipe para Gnuplot");
         return;
     }
-    // Envia os comandos para o Gnuplot
     fprintf(gnuplotPipe, "set multiplot layout 1, 2 title 'Gráfico de Tempos Médios'\n");
 
     fprintf(gnuplotPipe, "set multiplot layout 1, 2 title 'Gráfico de Tempos Médios'\n");
 
-    // Primeiro gráfico: dados reais
     fprintf(gnuplotPipe, "set xlabel 'Tamanho do problema'\n");
     fprintf(gnuplotPipe, "set ylabel 'Tempo médio (ms)'\n");
     fprintf(gnuplotPipe, "plot 'dados.txt' using 1:2 with linespoints title 'Tempos Médios'\n");
 
-    // Segundo gráfico: equação quadrática
     fprintf(gnuplotPipe, "set xlabel 'Tamanho do problema'\n");
     fprintf(gnuplotPipe, "set ylabel 'Tempo médio (ms)'\n");
     fprintf(gnuplotPipe, "plot 2*x**2 + x + 2 title 'Equação Quadrática: y = 2x^2 + x + 2'\n");
 
-    // Finaliza o multiplot
     fprintf(gnuplotPipe, "unset multiplot\n");
 
-    // Fecha o pipe
     pclose(gnuplotPipe);
+}
+
+double **alocarMatriz(int linhas, int colunas)
+{
+    double **matriz = (double **)malloc(linhas * sizeof(double *));
+    for (int i = 0; i < linhas; i++)
+    {
+        matriz[i] = (double *)malloc(colunas * sizeof(double));
+    }
+    return matriz;
+}
+
+void liberarMatriz(double **matriz, int linhas)
+{
+    for (int i = 0; i < linhas; i++)
+    {
+        free(matriz[i]);
+    }
+    free(matriz);
+}
+
+int matrizInversivel(double **matriz, int n)
+{
+    double det = 0.0;
+
+    if (n == 1)
+    {
+        return matriz[0][0] != 0.0;
+    }
+
+    double **temp = alocarMatriz(n, n);
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            temp[i][j] = matriz[i][j];
+        }
+    }
+
+    int sign = 1;
+
+    for (int f = 0; f < n; f++)
+    {
+        for (int i = 1; i < n; i++)
+        {
+            int k = 0;
+            for (int j = 0; j < n; j++)
+            {
+                if (j == f)
+                    continue;
+                temp[i - 1][k++] = matriz[i][j];
+            }
+        }
+        det += sign * matriz[0][f] * matrizInversivel(temp, n - 1);
+        sign = -sign;
+    }
+
+    // Liberando memória da matriz temporária
+    liberarMatriz(matriz, n);
+    return (det != 0);
 }
