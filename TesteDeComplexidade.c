@@ -26,11 +26,12 @@ double determinant(double **matriz, int n);
 void getCofactor(double **matriz, double **temp, int p, int q, int n);
 int ehInversivel(double **matriz, int n);
 void imprimirMat(double **matriz, int lin, int col, int qntDigitos);
+void plotGraphGNU(double *temposMedios, int *tamanhos, int testes);
 int main()
 {
-    int qntdOrdenacoes = 20;
+    int qntdOrdenacoes = 100;
     int tamanho = 10000;
-    int testes = 20;
+    int testes = 100;
     double *tempos;
     int *tamanhos = (int *)malloc(testes * sizeof(int));
     double *temposMediosVet = (double *)malloc(testes * sizeof(double));
@@ -39,13 +40,14 @@ int main()
     for (int i = 0; i < testes; tamanho += 10000, i++)
     {
         tamanhos[i] = tamanho;
-        /* tempos = complexidadeMedia(merge_sort, qntdOrdenacoes, tamanho, time(NULL));
-       escreverEmArquivo(tempos, qntdOrdenacoes, tamanho, i);  */
+        tempos = complexidadeMedia(merge_sort, qntdOrdenacoes, tamanho, time(NULL));
+        escreverEmArquivo(tempos, qntdOrdenacoes, tamanho, i);
     }
 
     temposMediosGet(temposMediosVet, testes);
-    MMQTerceiroGrau(temposMediosVet, tamanhos, testes);
-    //  free(tempos);
+    MMQSegundoGrau(temposMediosVet, tamanhos, testes);
+    plotGraphGNU(temposMediosVet, tamanhos, testes);
+    free(tempos);
 }
 void geradorRandom(int *array, int seed, int qntd)
 {
@@ -256,7 +258,6 @@ void escreverEmArquivo(double *tempo, int qntTempos, int n, int i)
     fprintf(arquivoDeTempo, "\nTempo medio do algoritmo: %f", tempoMedio);
     fclose(arquivoDeTempo);
     free(nomeDoArquivo);
-    free(arquivoDeTempo);
 }
 // Função que vai armazenar os tempos medios dos arquivos gerados anteriormente em um array de tempos medios
 void temposMediosGet(double *temposMedios, int qntTamanhos)
@@ -361,51 +362,51 @@ double **MMQPrimeiroGrau(double *temposMedios, int *tamanhosN, int testes)
     free(y);
 }
 
-double **MMQSegundoGrau(double *temposMedios, int *tamanhosN, int testes)
+double **MMQSegundoGrau(double *temposMedios, int *tamanhosN, int linhas)
 {
-    double **A = (double **)malloc(testes * sizeof(double *));
-    double **y = (double **)malloc(testes * sizeof(double *));
+    double **A = (double **)malloc(linhas * sizeof(double *));
+    double **y = (double **)malloc(linhas * sizeof(double *));
     verificarAlocacaoMatriz(A, "Matriz A MMQ");
     verificarAlocacaoMatriz(y, "Matriz y MMQ");
-    for (int i = 0; i < testes; i++)
+    for (int i = 0; i < linhas; i++)
     {
         A[i] = (double *)malloc(3 * sizeof(double));
-        y[i] = (double *)malloc(3 * sizeof(double));
+        y[i] = (double *)malloc(sizeof(double));
         verificarAlocacaoPonteiroDouble(A[i], "colunas da matriz A");
         verificarAlocacaoPonteiroDouble(y[i], "colunas da matriz y");
         A[i][0] = 1;
         A[i][1] = tamanhosN[i];
         A[i][2] = pow(tamanhosN[i], 2);
-        y[i][0] = 1;
-        y[i][1] = temposMedios[i];
-        y[i][2] = pow(temposMedios[i], 2);
+        y[i][0] = temposMedios[i];
+        /* y[i][2] = pow(temposMedios[i], 2);
+        y[i][3] = pow(temposMedios[i], 3); */
     }
     // Realizando calculos necessarios para resolver o sistema A, B e C
     printf("\n\n");
     printf("Matriz A: \n");
-    imprimirMat(A, testes, 3, 5);
+    imprimirMat(A, linhas, 3, 5);
     printf("\n");
     printf("Matriz Y: \n");
 
-    imprimirMat(y, testes, 3, 6);
+    imprimirMat(y, linhas, 1, 6);
     printf("\n");
 
-    double **Atransposta = calcularTransposta(A, testes, 3);
+    double **Atransposta = calcularTransposta(A, linhas, 3);
     printf("Matriz A transposta: \n");
-    imprimirMat(Atransposta, 3, testes, 6);
+    imprimirMat(Atransposta, 3, linhas, 6);
     printf("\n");
-    double **AtA = produtoEntreMatrizes(A, Atransposta, testes, 3, testes);
+    double **AtA = produtoEntreMatrizes(A, Atransposta, linhas, 3, linhas);
     printf("Matriz A * A transposta: \n");
-    imprimirMat(AtA, testes, testes, 6);
+    imprimirMat(AtA, linhas, linhas, 6);
     printf("\n");
     if (ehInversivel(AtA, 3) == 1)
     {
 
-        double **AtY = produtoEntreMatrizes(Atransposta, y, 3, testes, 3);
+        double **AtY = produtoEntreMatrizes(Atransposta, y, 3, linhas, 1);
         printf("Matriz A tranposta*y: \n");
-        imprimirMat(AtY, 3, 3, 5);
+        imprimirMat(AtY, 3, 1, 5);
         printf("\n");
-        double **AtA_inv = calcularInversa(AtA, 3);
+        double **AtA_inv = calcularInversa(AtA, linhas);
         printf("Matriz inversa de: A * A transposta: \n");
         imprimirMat(AtA_inv, 3, 3, 5);
         printf("\n");
@@ -414,6 +415,8 @@ double **MMQSegundoGrau(double *temposMedios, int *tamanhosN, int testes)
         printf("a = %s\n", extrairDoisPrimeirosDigitos(result[0][0], 3));
         printf("b = %s\n", extrairDoisPrimeirosDigitos(result[1][0], 3));
         printf("c = %s\n", extrairDoisPrimeirosDigitos(result[2][0], 3));
+        printf("d = %s\n", extrairDoisPrimeirosDigitos(result[3][0], 3));
+
         for (int i = 0; i < 3; i++)
         {
             free(Atransposta[i]);
@@ -433,7 +436,7 @@ double **MMQSegundoGrau(double *temposMedios, int *tamanhosN, int testes)
         printf("\nA matriz gerada não é inversivel\n");
     }
 
-    for (int i = 0; i < testes; i++)
+    for (int i = 0; i < linhas; i++)
     {
         free(A[i]);
         free(y[i]);
@@ -442,53 +445,52 @@ double **MMQSegundoGrau(double *temposMedios, int *tamanhosN, int testes)
     free(y);
 }
 
-double **MMQTerceiroGrau(double *temposMedios, int *tamanhosN, int testes)
+double **MMQTerceiroGrau(double *temposMedios, int *tamanhosN, int linhas)
 {
-    double **A = (double **)malloc(testes * sizeof(double *));
-    double **y = (double **)malloc(testes * sizeof(double *));
+    double **A = (double **)malloc(linhas * sizeof(double *));
+    double **y = (double **)malloc(linhas * sizeof(double *));
     verificarAlocacaoMatriz(A, "Matriz A MMQ");
     verificarAlocacaoMatriz(y, "Matriz y MMQ");
-    for (int i = 0; i < testes; i++)
+    for (int i = 0; i < linhas; i++)
     {
         A[i] = (double *)malloc(4 * sizeof(double));
-        y[i] = (double *)malloc(4 * sizeof(double));
+        y[i] = (double *)malloc(sizeof(double));
         verificarAlocacaoPonteiroDouble(A[i], "colunas da matriz A");
         verificarAlocacaoPonteiroDouble(y[i], "colunas da matriz y");
         A[i][0] = 1;
         A[i][1] = tamanhosN[i];
         A[i][2] = pow(tamanhosN[i], 2);
         A[i][3] = pow(tamanhosN[i], 3);
-        y[i][0] = 1;
-        y[i][1] = temposMedios[i];
-        y[i][2] = pow(temposMedios[i], 2);
-        y[i][3] = pow(temposMedios[i], 3); 
+        y[i][0] = temposMedios[i];
+        /* y[i][2] = pow(temposMedios[i], 2);
+        y[i][3] = pow(temposMedios[i], 3); */
     }
     // Realizando calculos necessarios para resolver o sistema A, B e C
     printf("\n\n");
     printf("Matriz A: \n");
-    imprimirMat(A, testes, 4, 5);
+    imprimirMat(A, linhas, 4, 5);
     printf("\n");
     printf("Matriz Y: \n");
 
-    imprimirMat(y, testes, 4, 6);
+    imprimirMat(y, linhas, 1, 6);
     printf("\n");
 
-    double **Atransposta = calcularTransposta(A, testes, 4);
+    double **Atransposta = calcularTransposta(A, linhas, 4);
     printf("Matriz A transposta: \n");
-    imprimirMat(Atransposta, 4, testes, 6);
+    imprimirMat(Atransposta, 4, linhas, 6);
     printf("\n");
-    double **AtA = produtoEntreMatrizes(A, Atransposta, testes, 4, testes);
+    double **AtA = produtoEntreMatrizes(A, Atransposta, linhas, 4, linhas);
     printf("Matriz A * A transposta: \n");
-    imprimirMat(AtA, testes, testes, 6);
+    imprimirMat(AtA, linhas, linhas, 6);
     printf("\n");
     if (ehInversivel(AtA, 4) == 1)
     {
 
-        double **AtY = produtoEntreMatrizes(Atransposta, y, 4, testes, 4);
+        double **AtY = produtoEntreMatrizes(Atransposta, y, 4, linhas, 1);
         printf("Matriz A tranposta*y: \n");
-        imprimirMat(AtY, 4, 4, 5);
+        imprimirMat(AtY, 4, 1, 5);
         printf("\n");
-        double **AtA_inv = calcularInversa(AtA, 4);
+        double **AtA_inv = calcularInversa(AtA, linhas);
         printf("Matriz inversa de: A * A transposta: \n");
         imprimirMat(AtA_inv, 4, 4, 5);
         printf("\n");
@@ -518,7 +520,7 @@ double **MMQTerceiroGrau(double *temposMedios, int *tamanhosN, int testes)
         printf("\nA matriz gerada não é inversivel\n");
     }
 
-    for (int i = 0; i < testes; i++)
+    for (int i = 0; i < linhas; i++)
     {
         free(A[i]);
         free(y[i]);
@@ -699,7 +701,7 @@ void getCofactor(double **matriz, double **temp, int p, int q, int n)
 int ehInversivel(double **matriz, int n)
 {
     double det = determinant(matriz, n);
-    //  printf("\n%f\n", det);
+    printf("\n%f\n", det);
     if (det != 0)
     {
         return 1;
@@ -769,4 +771,51 @@ void verificarAlocacaoMatriz(double **ptrr, char *local)
         printf("\nFalha na alocação de memoria %s", local);
         exit(EXIT_FAILURE);
     }
+}
+
+void plotGraphGNU(double *temposMedios, int *tamanhos, int testes)
+{
+    // Escreve os dados em um arquivo
+    FILE *dados = fopen("dados.txt", "w");
+    if (dados == NULL)
+    {
+        perror("Erro ao abrir o arquivo dados.txt");
+        return;
+    }
+
+    // Escreve os dados no arquivo
+    for (int i = 0; i < testes; i++)
+    {
+        fprintf(dados, "%i %f\n", tamanhos[i], temposMedios[i]);
+    }
+
+    fclose(dados);
+
+    // Cria o pipe para o Gnuplot
+    FILE *gnuplotPipe = popen("gnuplot -persist", "w");
+    if (gnuplotPipe == NULL)
+    {
+        perror("Erro ao abrir o pipe para Gnuplot");
+        return;
+    }
+    // Envia os comandos para o Gnuplot
+    fprintf(gnuplotPipe, "set multiplot layout 1, 2 title 'Gráfico de Tempos Médios'\n");
+
+    fprintf(gnuplotPipe, "set multiplot layout 1, 2 title 'Gráfico de Tempos Médios'\n");
+
+    // Primeiro gráfico: dados reais
+    fprintf(gnuplotPipe, "set xlabel 'Tamanho do problema'\n");
+    fprintf(gnuplotPipe, "set ylabel 'Tempo médio (ms)'\n");
+    fprintf(gnuplotPipe, "plot 'dados.txt' using 1:2 with linespoints title 'Tempos Médios'\n");
+
+    // Segundo gráfico: equação quadrática
+    fprintf(gnuplotPipe, "set xlabel 'Tamanho do problema'\n");
+    fprintf(gnuplotPipe, "set ylabel 'Tempo médio (ms)'\n");
+    fprintf(gnuplotPipe, "plot 2*x**2 + x + 2 title 'Equação Quadrática: y = 2x^2 + x + 2'\n");
+
+    // Finaliza o multiplot
+    fprintf(gnuplotPipe, "unset multiplot\n");
+
+    // Fecha o pipe
+    pclose(gnuplotPipe);
 }
