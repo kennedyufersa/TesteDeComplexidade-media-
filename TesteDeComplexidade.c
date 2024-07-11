@@ -731,7 +731,7 @@ void plotGraphGNU(double *temposMedios, int *tamanhos, int testes)
 
     for (int i = 0; i < testes; i++)
     {
-        fprintf(dados, " %f %i\n", temposMedios[i], tamanhos[i]);
+        fprintf(dados, " %i %f\n", tamanhos[i], temposMedios[i]);
     }
 
     fclose(dados);
@@ -742,15 +742,19 @@ void plotGraphGNU(double *temposMedios, int *tamanhos, int testes)
         perror("Erro ao abrir o pipe para Gnuplot");
         return;
     }
-    fprintf(gnuplotPipe, "set terminal pngcairo enhanced size 800,600\n");
+    fprintf(gnuplotPipe, "set terminal pngcairo enhanced size 1280,900\n");
     fprintf(gnuplotPipe, "set output 'grafico.png'\n");
     fprintf(gnuplotPipe, "set title 'Grafico de complexidade'\n");
-    fprintf(gnuplotPipe, "set xlabel 'Tempo medio'\n");
-    fprintf(gnuplotPipe, "set ylabel 'Tamanho'\n");
+    fprintf(gnuplotPipe, "set xlabel 'Tamanho do problema'\n");
+    fprintf(gnuplotPipe, "set ylabel 'Tempo medio'\n");
     fprintf(gnuplotPipe, "set grid\n");
-    fprintf(gnuplotPipe, "f(x) = x*x*x\n");
-    fprintf(gnuplotPipe, " plot 'dados.txt' using 1:2 title 'Pontos' with points pointtype 7 pointsize 1 lc rgb 'blue', \
-     f(x) title 'Função Identificada' with lines lw 2 lc rgb 'red'");
+    fprintf(gnuplotPipe, "f(x) = x\n");
+    fprintf(gnuplotPipe, "g(x) = x**3\n");
+    fprintf(gnuplotPipe, "logarithmic(x) = log(x) / log(2)\n");
+    fprintf(gnuplotPipe, "plot 'dados.txt' using 1:2 title 'Pontos' with points pointtype 7 pointsize 1 lc rgb 'blue', \
+     f(x) title 'Função 2 grau' with lines lw 2 lc rgb 'red', \
+     g(x) title 'Função Cúbica' with lines lw 2 lc rgb 'green', \
+     logarithmic(x) title 'O(log n)' with lines lw 2 lc rgb 'purple'\n");
 
     pclose(gnuplotPipe);
 }
