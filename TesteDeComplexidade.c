@@ -29,9 +29,9 @@ void liberarMatriz(double **matriz, int linhas);
 double **alocarMatriz(int linhas, int colunas);
 int main()
 {
-    int qntdOrdenacoes = 100;
+    int qntdOrdenacoes = 11;
     int tamanho = 10000;
-    int testes = 100;
+    int testes = 11;
     double *tempos;
     int *tamanhos = (int *)malloc(testes * sizeof(int));
     double *temposMediosVet = (double *)malloc(testes * sizeof(double));
@@ -40,12 +40,12 @@ int main()
     for (int i = 0; i < testes; tamanho += 10000, i++)
     {
         tamanhos[i] = tamanho;
-        /*    tempos = complexidadeMedia(merge_sort, qntdOrdenacoes, tamanho, time(NULL));
-           escreverEmArquivo(tempos, qntdOrdenacoes, tamanho, i); */
+        /* tempos = complexidadeMedia(merge_sort, qntdOrdenacoes, tamanho, time(NULL));
+        escreverEmArquivo(tempos, qntdOrdenacoes, tamanho, i); */
     }
 
     temposMediosGet(temposMediosVet, testes);
-    MMQSegundoGrau(temposMediosVet, tamanhos, testes);
+    MMQPrimeiroGrau(temposMediosVet, tamanhos, testes);
     plotGraphGNU(temposMediosVet, tamanhos, testes);
     // free(tempos);
 }
@@ -284,13 +284,13 @@ void temposMediosGet(double *temposMedios, int qntTamanhos)
 }
 
 // Função a qual será usada para realizar o calculo do MMQ de uma matriz
-double **MMQPrimeiroGrau(double *temposMedios, int *tamanhosN, int testes)
+double **MMQPrimeiroGrau(double *temposMedios, int *tamanhosN, int linhas)
 {
-    double **A = (double **)malloc(testes * sizeof(double *));
-    double **y = (double **)malloc(testes * sizeof(double *));
+    double **A = (double **)malloc(linhas * sizeof(double *));
+    double **y = (double **)malloc(linhas * sizeof(double *));
     verificarAlocacaoMatriz(A, "Matriz A MMQ");
     verificarAlocacaoMatriz(y, "Matriz y MMQ");
-    for (int i = 0; i < testes; i++)
+    for (int i = 0; i < linhas; i++)
     {
         A[i] = (double *)malloc(2 * sizeof(double));
         y[i] = (double *)malloc(2 * sizeof(double));
@@ -302,38 +302,40 @@ double **MMQPrimeiroGrau(double *temposMedios, int *tamanhosN, int testes)
         y[i][1] = temposMedios[i];
     }
     // Realizando calculos necessarios para resolver o sistema A e B
-    printf("\n");
+    printf("\n\n");
     printf("Matriz A: \n");
-    imprimirMat(A, testes, 2, 5);
+    imprimirMat(A, linhas, 2, 5);
     printf("\n");
     printf("Matriz Y: \n");
 
-    imprimirMat(y, testes, 2, 5);
+    imprimirMat(y, linhas, 2, 6);
     printf("\n");
 
-    double **Atransposta = calcularTransposta(A, testes, 2);
+    double **Atransposta = calcularTransposta(A, linhas, 2);
     printf("Matriz A transposta: \n");
-    imprimirMat(Atransposta, 2, testes, 4);
+    imprimirMat(Atransposta, 2, linhas, 6);
     printf("\n");
-    double **AtA = produtoEntreMatrizes(A, Atransposta, testes, 2, testes);
+    double **AtA = produtoEntreMatrizes(Atransposta, A, 2, linhas, 2);
     printf("Matriz A * A transposta: \n");
-    imprimirMat(AtA, testes, testes, 4);
+    imprimirMat(AtA, 2, 2, 6);
     printf("\n");
-    double **AtY = produtoEntreMatrizes(Atransposta, y, 2, testes, 2);
-    printf("Matriz A tranposta*y: \n");
-    imprimirMat(AtY, 2, 2, 4);
-    printf("\n");
-    if (matrizInversivel(AtA, testes))
-    {
 
+    double **AtY = produtoEntreMatrizes(Atransposta, y, 2, linhas, 2);
+
+    printf("Matriz A tranposta*y: \n");
+    imprimirMat(AtY, 2, 2, 10);
+    printf("\n");
+    if (matrizInversivel(AtA, 2))
+    {
+        printf("\nA matriz eh inversivel.\n");
         double **AtA_inv = calcularInversa(AtA, 2);
         printf("Matriz inversa de: A * A transposta: \n");
-        imprimirMat(AtA_inv, 2, 2, 4);
+        imprimirMat(AtA_inv, 2, 2, 10);
         printf("\n");
         double **result = produtoEntreMatrizes(AtA_inv, AtY, 2, 2, 2);
         printf("\n");
-        printf("a = %s\n", extrairDoisPrimeirosDigitos(result[0][0], 3));
-        printf("b = %s\n", extrairDoisPrimeirosDigitos(result[1][0], 3));
+        printf("a = %f\n", result[0][0]);
+        printf("b = %f\n", result[1][0]);
         for (int i = 0; i < 2; i++)
         {
             free(Atransposta[i]);
@@ -350,10 +352,10 @@ double **MMQPrimeiroGrau(double *temposMedios, int *tamanhosN, int testes)
     }
     else
     {
-        printf("\nA matriz gerada nao eh inversivel\n");
+        printf("\nA matriz nao eh inversivel.\n");
     }
 
-    for (int i = 0; i < testes; i++)
+    for (int i = 0; i < linhas; i++)
     {
         free(A[i]);
         free(y[i]);
@@ -395,27 +397,28 @@ double **MMQSegundoGrau(double *temposMedios, int *tamanhosN, int linhas)
     printf("Matriz A transposta: \n");
     imprimirMat(Atransposta, 3, linhas, 6);
     printf("\n");
-    double **AtA = produtoEntreMatrizes(A, Atransposta, linhas, 3, linhas);
+    double **AtA = produtoEntreMatrizes(Atransposta, A, 3, linhas, 3);
     printf("Matriz A * A transposta: \n");
-    imprimirMat(AtA, linhas, linhas, 6);
+    imprimirMat(AtA, 3, linhas, 6);
     printf("\n");
 
-    double **AtY = produtoEntreMatrizes(Atransposta, y, 3, linhas, 3);
-    printf("Matriz A tranposta*y: \n");
+    double **AtY = produtoEntreMatrizes(y, Atransposta, linhas, 3, linhas);
+    printf("Matriz y * A tranposta: \n");
     imprimirMat(AtY, 3, 3, 5);
     printf("\n");
     if (matrizInversivel(AtA, 3))
     {
         printf("\nA matriz eh inversivel.\n");
         double **AtA_inv = calcularInversa(AtA, 3);
-        printf("Matriz inversa de: A * A transposta: \n");
+        printf("Matriz inversa de: A transposta * A : \n");
         imprimirMat(AtA_inv, 3, 3, 5);
         printf("\n");
         double **result = produtoEntreMatrizes(AtA_inv, AtY, 3, 3, 3);
+
         printf("\n");
-        printf("a = %s\n", extrairDoisPrimeirosDigitos(result[0][0], 3));
-        printf("b = %s\n", extrairDoisPrimeirosDigitos(result[1][0], 3));
-        printf("c = %s\n", extrairDoisPrimeirosDigitos(result[2][0], 3));
+        printf("a = %s\n", extrairDoisPrimeirosDigitos(result[0][0], 5));
+        printf("b = %s\n", extrairDoisPrimeirosDigitos(result[1][0], 5));
+        printf("c = %s\n", extrairDoisPrimeirosDigitos(result[2][0], 5));
         for (int i = 0; i < 3; i++)
         {
             free(Atransposta[i]);
@@ -479,27 +482,29 @@ double **MMQTerceiroGrau(double *temposMedios, int *tamanhosN, int linhas)
     printf("Matriz A transposta: \n");
     imprimirMat(Atransposta, 4, linhas, 6);
     printf("\n");
-    double **AtA = produtoEntreMatrizes(A, Atransposta, linhas, 4, linhas);
+    double **AtA = produtoEntreMatrizes(Atransposta, A, 4, linhas, 4);
     printf("Matriz A * A transposta: \n");
-    imprimirMat(AtA, linhas, linhas, 6);
+    imprimirMat(AtA, 4, 4, 6);
     printf("\n");
-    double **AtY = produtoEntreMatrizes(Atransposta, y, 4, linhas, 4);
-    printf("Matriz A tranposta*y: \n");
+
+    double **AtY = produtoEntreMatrizes(y, Atransposta, linhas, 4, linhas);
+    printf("Matriz y * A tranposta: \n");
     imprimirMat(AtY, 4, 4, 5);
+    printf("\n");
     if (matrizInversivel(AtA, 4))
     {
-
-        printf("\n");
-        double **AtA_inv = calcularInversa(AtA, linhas);
-        printf("Matriz inversa de: A * A transposta: \n");
+        printf("\nA matriz eh inversivel.\n");
+        double **AtA_inv = calcularInversa(AtA, 4);
+        printf("Matriz inversa de: A transposta * A : \n");
         imprimirMat(AtA_inv, 4, 4, 5);
         printf("\n");
         double **result = produtoEntreMatrizes(AtA_inv, AtY, 4, 4, 4);
+
         printf("\n");
-        printf("a = %s\n", extrairDoisPrimeirosDigitos(result[0][0], 4));
-        printf("b = %s\n", extrairDoisPrimeirosDigitos(result[1][0], 4));
-        printf("c = %s\n", extrairDoisPrimeirosDigitos(result[2][0], 4));
-        printf("d = %s\n", extrairDoisPrimeirosDigitos(result[3][0], 4));
+        printf("a = %s\n", extrairDoisPrimeirosDigitos(result[0][0], 5));
+        printf("b = %s\n", extrairDoisPrimeirosDigitos(result[1][0], 5));
+        printf("c = %s\n", extrairDoisPrimeirosDigitos(result[2][0], 5));
+        printf("d = %s\n", extrairDoisPrimeirosDigitos(result[3][0], 5));
 
         for (int i = 0; i < 4; i++)
         {
@@ -517,7 +522,7 @@ double **MMQTerceiroGrau(double *temposMedios, int *tamanhosN, int linhas)
     }
     else
     {
-        printf("\nA matriz gerada não é inversivel\n");
+        printf("\nA matriz nao eh inversivel.\n");
     }
 
     for (int i = 0; i < linhas; i++)
@@ -661,14 +666,7 @@ void imprimirMat(double **matriz, int lin, int col, int qntDigitos)
     {
         for (int j = 0; j < col; j++)
         {
-
-            char *numero = extrairDoisPrimeirosDigitos(matriz[i][j], qntDigitos);
-            if (numero != NULL)
-                printf(" %s ", numero);
-            else
-                printf(" Erro na conversão ");
-
-            free(numero);
+            printf(" %f ", matriz[i][j]);
         }
         printf("\n");
     }
@@ -742,19 +740,18 @@ void plotGraphGNU(double *temposMedios, int *tamanhos, int testes)
         perror("Erro ao abrir o pipe para Gnuplot");
         return;
     }
-    fprintf(gnuplotPipe, "set terminal pngcairo enhanced size 1280,900\n");
+    fprintf(gnuplotPipe, "set terminal pngcairo enhanced size 1280,1280\n");
     fprintf(gnuplotPipe, "set output 'grafico.png'\n");
     fprintf(gnuplotPipe, "set title 'Grafico de complexidade'\n");
     fprintf(gnuplotPipe, "set xlabel 'Tamanho do problema'\n");
     fprintf(gnuplotPipe, "set ylabel 'Tempo medio'\n");
     fprintf(gnuplotPipe, "set grid\n");
-    fprintf(gnuplotPipe, "f(x) = x\n");
-    fprintf(gnuplotPipe, "g(x) = x**3\n");
-    fprintf(gnuplotPipe, "logarithmic(x) = log(x) / log(2)\n");
+    // fprintf(gnuplotPipe, "f(x) = 5533*x**2-209*x + 0\n");
+    // fprintf(gnuplotPipe, "f(x) = 3012*x**3 - 211*x**2 + 3998*x - 0.2\n");
+    // fprintf(gnuplotPipe, "f(x) = 9333*x -0.13\n");
+    fprintf(gnuplotPipe, "f(x) = (log(x) / log(2))\n");
     fprintf(gnuplotPipe, "plot 'dados.txt' using 1:2 title 'Pontos' with points pointtype 7 pointsize 1 lc rgb 'blue', \
-     f(x) title 'Função 2 grau' with lines lw 2 lc rgb 'red', \
-     g(x) title 'Função Cúbica' with lines lw 2 lc rgb 'green', \
-     logarithmic(x) title 'O(log n)' with lines lw 2 lc rgb 'purple'\n");
+     f(x) title 'O(n)' with lines lw 2 lc rgb 'purple'\n");
 
     pclose(gnuplotPipe);
 }
