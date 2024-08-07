@@ -1,6 +1,5 @@
 #include "FuncoesMMQ.h"
 
-
 double *complexidadeMedia(void(func)(int *, int, int), int qntdOrdenacoes, int tamanho, int seed)
 {
     clock_t start_time, end_time;
@@ -76,11 +75,6 @@ double **MMQPrimeiroGrau(double *temposMedios, int *tamanhosN, int linhas)
     imprimirMat(AtA, 2, 2, 6);
     printf("\n");
 
-    double **AtY = produtoEntreMatrizes(Atransposta, y, 2, linhas, 2);
-
-    printf("Matriz A tranposta*y: \n");
-    imprimirMat(AtY, 2, 2, 10);
-    printf("\n");
     if (matrizInversivel(AtA, 2))
     {
         printf("\nA matriz eh inversivel.\n");
@@ -88,7 +82,9 @@ double **MMQPrimeiroGrau(double *temposMedios, int *tamanhosN, int linhas)
         printf("Matriz inversa de: A * A transposta: \n");
         imprimirMat(AtA_inv, 2, 2, 10);
         printf("\n");
-        double **result = produtoEntreMatrizes(AtA_inv, AtY, 2, 2, 2);
+
+        printf("\n");
+        double **result = produtoEntreMatrizes(AtA_inv, y, 2, 2, 2);
         printf("\n");
         printf("a = %f\n", result[0][0]);
         printf("b = %f\n", result[1][0]);
@@ -96,13 +92,11 @@ double **MMQPrimeiroGrau(double *temposMedios, int *tamanhosN, int linhas)
         {
             free(Atransposta[i]);
             free(AtA[i]);
-            free(AtY[i]);
             free(AtA_inv[i]);
             free(result[i]);
         }
         free(Atransposta);
         free(AtA);
-        free(AtY);
         free(AtA_inv);
         free(result);
     }

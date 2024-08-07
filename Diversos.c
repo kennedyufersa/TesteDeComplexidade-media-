@@ -131,8 +131,8 @@ void plotGraphGNU(double *temposMedios, int *tamanhos, int testes)
     fprintf(gnuplotPipe, "set grid\n");
     // fprintf(gnuplotPipe, "f(x) = 5533*x**2-209*x + 0\n");
     // fprintf(gnuplotPipe, "f(x) = 3012*x**3 - 211*x**2 + 3998*x - 0.2\n");
-    // fprintf(gnuplotPipe, "f(x) = 9333*x -0.13\n");
-    fprintf(gnuplotPipe, "f(x) = (log(x) / log(2))\n");
+     fprintf(gnuplotPipe, "f(x) = 0.46*x -0.000007\n");
+    //fprintf(gnuplotPipe, "f(x) = (log(x) / log(2))\n");
     fprintf(gnuplotPipe, "plot 'dados.txt' using 1:2 title 'Pontos' with points pointtype 7 pointsize 1 lc rgb 'blue', \
      f(x) title 'O(n)' with lines lw 2 lc rgb 'purple'\n");
 
