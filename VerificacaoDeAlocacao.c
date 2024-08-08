@@ -1,4 +1,3 @@
-
 #include "VerificacaoDeAlocacao.h"
 
 double **alocarMatriz(int linhas, int colunas)

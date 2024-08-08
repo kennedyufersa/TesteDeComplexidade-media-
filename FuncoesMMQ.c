@@ -1,4 +1,5 @@
 #include "FuncoesMMQ.h"
+#include "CalculoDeMatrizes.c"
 
 double *complexidadeMedia(void(func)(int *, int, int), int qntdOrdenacoes, int tamanho, int seed)
 {

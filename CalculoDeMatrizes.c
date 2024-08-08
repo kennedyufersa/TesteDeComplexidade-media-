@@ -1,4 +1,4 @@
-#include "CalculoDeMatrizes.h"
+ #include "CalculoDeMatrizes.h"
 
 double **calcularTransposta(double **A, int linhas, int colunas)
 {
@@ -194,4 +194,4 @@ int matrizInversivel(double **matriz, int n)
     free(indexes);
 
     return (det != 0);
-}
+} 

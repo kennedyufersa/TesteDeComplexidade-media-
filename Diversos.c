@@ -1,5 +1,6 @@
 #include "Diversos.h"
 #include "VerificacaoDeAlocacao.h"
+
 void temposMediosGet(double *temposMedios, int qntTamanhos)
 {
     char *nomeDoArquivo = (char *)malloc(20 * sizeof(char));
@@ -101,7 +102,7 @@ void escreverEmArquivo(double *tempo, int qntTempos, int n, int i)
     free(nomeDoArquivo);
 }
 
-void plotGraphGNU(double *temposMedios, int *tamanhos, int testes)
+void plotGraphGNU(double *temposMedios, double *tamanhos, int testes, double a, double b, int j)
 {
     FILE *dados = fopen("dados.txt", "w");
     if (dados == NULL)
@@ -112,7 +113,7 @@ void plotGraphGNU(double *temposMedios, int *tamanhos, int testes)
 
     for (int i = 0; i < testes; i++)
     {
-        fprintf(dados, " %i %f\n", tamanhos[i], temposMedios[i]);
+        fprintf(dados, " %f %f\n", temposMedios[i], tamanhos[i]);
     }
 
     fclose(dados);
@@ -123,18 +124,19 @@ void plotGraphGNU(double *temposMedios, int *tamanhos, int testes)
         perror("Erro ao abrir o pipe para Gnuplot");
         return;
     }
+
     fprintf(gnuplotPipe, "set terminal pngcairo enhanced size 1280,1280\n");
-    fprintf(gnuplotPipe, "set output 'grafico.png'\n");
+    fprintf(gnuplotPipe, "set output 'grafico%i.png'\n", j);
     fprintf(gnuplotPipe, "set title 'Grafico de complexidade'\n");
     fprintf(gnuplotPipe, "set xlabel 'Tamanho do problema'\n");
     fprintf(gnuplotPipe, "set ylabel 'Tempo medio'\n");
     fprintf(gnuplotPipe, "set grid\n");
     // fprintf(gnuplotPipe, "f(x) = 5533*x**2-209*x + 0\n");
-    // fprintf(gnuplotPipe, "f(x) = 3012*x**3 - 211*x**2 + 3998*x - 0.2\n");
-     fprintf(gnuplotPipe, "f(x) = 0.46*x -0.000007\n");
-    //fprintf(gnuplotPipe, "f(x) = (log(x) / log(2))\n");
+    // fprintf(gnuplotPipe, "f(x) = %f*x**3 - 211*x**2 + 3998*x - 0.2\n");
+    fprintf(gnuplotPipe, "f(x) = %f*x + %f\n", a, b);
+    // fprintf(gnuplotPipe, "f(x) = (log(x) / log(2))\n");
     fprintf(gnuplotPipe, "plot 'dados.txt' using 1:2 title 'Pontos' with points pointtype 7 pointsize 1 lc rgb 'blue', \
-     f(x) title 'O(n)' with lines lw 2 lc rgb 'purple'\n");
+         f(x) title 'O(n)' with lines lw 2 lc rgb 'green'\n");
 
     pclose(gnuplotPipe);
 }
