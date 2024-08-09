@@ -3,22 +3,29 @@
 double *funcaoErroQuadratico(double *coeficientes, double *tempos, double *tamanhos, int iteracoes, int qntPontos, double taxaDeAprendizado)
 {
     int i, j;
-
-    for (j = 0; j < iteracoes; j++)
+    double erro = 2;
+    double a_db, b_db;
+    while (erro > 1)
     {
-        double erro_a = 0.0, erro_b = 0.0;
-        for (i = 0; i < qntPontos; i++)
+        erro = 0;
+
+        for (int i = 0; i < qntPontos; i++)
         {
-            double previsao = coeficientes[1] + coeficientes[0] * tamanhos[i];
-            double erro = tempos[i] - previsao;
-            erro_a += erro * tamanhos[i];
-            erro_b += erro;
+            erro += pow((tempos[i] - coeficientes[1] - coeficientes[0] * tamanhos[i]), 2);
         }
 
-        coeficientes[0] -= taxaDeAprendizado * (2 * erro_a / qntPontos);
-        coeficientes[1] -= taxaDeAprendizado * (2 * erro_b / qntPontos);
+        a_db = b_db = 0.0;
 
-        printf("Iteracao %d: a = %f, b = %f\n", j, coeficientes[0], coeficientes[1]);
+        for (i = 0; i < qntPontos; i++)
+        {
+            a_db += (tempos[i] - coeficientes[1] - coeficientes[0]) * (-tamanhos[i]);
+            b_db += (tempos[i] - coeficientes[1] - coeficientes[0]) * (-1);
+        }
+
+        coeficientes[0] -= taxaDeAprendizado * (a_db/qntPontos);
+        coeficientes[1] -= taxaDeAprendizado * (b_db/qntPontos);
+
+        printf("a = %f, b = %f, erro = %f\n", coeficientes[0], coeficientes[1], erro);
     }
 
     return coeficientes;
