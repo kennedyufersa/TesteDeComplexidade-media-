@@ -8,7 +8,7 @@ int main()
 {
     int qntdOrdenacoes = 100;
     int tamanho = 1000;
-    int testes = 100;
+    int testes = 88;
     double *tempos;
     double *tamanhos = (double *)malloc(testes * sizeof(double));
     double *temposMediosVet = (double *)malloc(testes * sizeof(double));
@@ -24,10 +24,10 @@ int main()
     }
 
     temposMediosGet(temposMediosVet, testes);
-    coeficientes_e[0] = (temposMediosVet[testes-1] - temposMediosVet[0]) / (tamanhos[testes - 1] - tamanhos[0]);
+    coeficientes_e[0] = 0;
     coeficientes_e[1] = 0;
 
-    coeficientes_e = funcaoErroQuadratico(coeficientes_e, temposMediosVet, tamanhos, testes, 0.00000001);
+    coeficientes_e = funcaoErroQuadratico(coeficientes_e, temposMediosVet, tamanhos, testes, 0.01, 0);
     plotGraphGNU(temposMediosVet, tamanhos, testes, coeficientes_e[0], coeficientes_e[1], 1);
     free(tempos);
 }
